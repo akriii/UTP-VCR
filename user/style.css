@@ -1,0 +1,10 @@
+/* === GENERAL LAYOUT === */
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background-color: #f5f6f7;
+  transition: all 0.3s ease;
+  overflow-x: hidden;
+}
+
+

@@ -1,0 +1,39 @@
+# Composer Dependencies
+/vendor
+
+# Environment Variables (Sensitive Passwords)
+.env
+
+# System Generated Files & User Uploads
+# We ignore the files inside but keep the folder structure
+/generated_zips/*
+!/generated_zips/.gitkeep
+
+/uploads/*
+!/uploads/.gitkeep
+
+# Specific Document Folders (Based on your file structure)
+/kyc6/*
+!/kyc6/.gitkeep
+
+/bank_statement/*
+!/bank_statement/.gitkeep
+
+/declaration_form/*
+!/declaration_form/.gitkeep
+
+/fyp_form_file/*
+!/fyp_form_file/.gitkeep
+
+/appointment_file/*
+!/appointment_file/.gitkeep
+
+/ic_picture/*
+!/ic_picture/.gitkeep
+
+/face_captures/*
+!/face_captures/.gitkeep
+
+# OS generated files
+.DS_Store
+Thumbs.db
