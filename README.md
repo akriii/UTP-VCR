@@ -42,6 +42,7 @@ Ensure the following folders are writable by the web server:
 /fyp_form_file/
 /appointment_file/
 /ic_picture/
+/face_captures/
 
 4. USER ROLES
 
