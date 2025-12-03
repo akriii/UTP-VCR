@@ -42,13 +42,18 @@ Ensure the following folders are writable by the web server:
 /fyp_form_file/
 /appointment_file/
 /ic_picture/
+/face_captures/
 
 4. USER ROLES
 
 Student: Can register, upload FYP docs, track status.
+
 External Appt: Can register (with referral), upload appointment docs.
+
 KYC6 Admin: Verifies Identity (IC).
+
 AE Admin: Verifies Appointment Letters for their referrals.
+
 Master Admin: Final approval, Requisition of Vendor Code, ZIP Downloads, Document Verification.
 
 5. TROUBLESHOOTING
