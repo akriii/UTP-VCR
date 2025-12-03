@@ -1057,7 +1057,7 @@ $step6_visible = $step5_completed;
                 <i class="fa-solid fa-file-signature"></i> 
                 <strong>Bank Statement Approved</strong>
                 <br>
-                <a href="view_declaration.php" target="_blank">View Declaration Form</a>
+                <a href="../bank_statement/<?php echo htmlspecialchars($bankStatementFileName); ?>" target="_blank">View uploaded file</a>
                 <p style="color: green; margin-top: 10px;">
                     <i class="fa-solid fa-check-circle"></i> 
                     Your bank statement has been approved and cannot be modified.
@@ -1069,7 +1069,7 @@ $step6_visible = $step5_completed;
                     <i class="fa-solid fa-file"></i> 
                     <strong>Bank Statement Uploaded</strong>
                     <br>
-                    <a href="../bank_statement/<?php echo htmlspecialchars($fypForm02FileName); ?>" target="_blank">View uploaded file</a>
+                    <a href="../bank_statement/<?php echo htmlspecialchars($bankStatementFileName); ?>" target="_blank">View uploaded file</a>
                     <p style="color: #856404; margin-top: 10px;">
                         <i class="fa-solid fa-clock"></i> 
                         Waiting for admin verification. Please check back later.

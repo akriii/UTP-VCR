@@ -1,7 +1,23 @@
 <?php
 session_start();
-session_unset();    // Unset all session variables
-session_destroy();  // Destroy the session
-header("Location: ../login_admin.php"); // Redirect to login page
+
+// 1. Unset all session values
+$_SESSION = array();
+
+// 2. Delete the session cookie
+// This ensures the browser doesn't send the old session ID back
+if (ini_get("session.use_cookies")) {
+    $params = session_get_cookie_params();
+    setcookie(session_name(), '', time() - 42000,
+        $params["path"], $params["domain"],
+        $params["secure"], $params["httponly"]
+    );
+}
+
+// 3. Destroy the session
+session_destroy();
+
+// 4. Redirect to login
+header("Location: ../login_admin.php");
 exit();
 ?>
