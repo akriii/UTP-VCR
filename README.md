@@ -48,7 +48,7 @@ Ensure the following folders are writable by the web server:
 
 Student: Can register, upload FYP docs, track status.
 
-External Appt: Can register (with referral), upload appointment docs.
+External Appt: Internal UTP staff members who serve as the point of reference for external applicants
 
 KYC6 Admin: Verifies Identity (IC).
 
