@@ -1,7 +1,11 @@
 COPYRIGHT NOTICE
 ================
 
+<<<<<<< HEAD
 Copyright (c) 2025 Muhammad Akmal Fikri Bin Asma Zaki and Nurin Jazlina Binti Rashid Ridha / Universiti Teknologi PETRONAS (UTP)
+=======
+Copyright (c) 2025 Universiti Teknologi PETRONAS (UTP)
+>>>>>>> bb380f6d2d79d96923ee4d7684487405ce4c0d16
 
 All rights reserved.
 
@@ -15,4 +19,8 @@ Unauthorized copying, modification, distribution, or public display of this
 Software, via any medium, is strictly prohibited without the express written 
 permission of the copyright holder.
 
+<<<<<<< HEAD
 Proprietary and Confidential.
+=======
+Proprietary and Confidential.
+>>>>>>> bb380f6d2d79d96923ee4d7684487405ce4c0d16

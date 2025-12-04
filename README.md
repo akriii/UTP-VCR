@@ -48,11 +48,11 @@ Ensure the following folders are writable by the web server:
 
 Student: Can register, upload FYP docs, track status.
 
-External Appt: Can register (with referral), upload appointment docs.
+External Appt: External applicants outside of organization who wants to use the system.
 
 KYC6 Admin: Verifies Identity (IC).
 
-AE Admin: Verifies Appointment Letters for their referrals.
+AE Admin: Internal UTP staff members who serve as the point of reference for external applicants
 
 Master Admin: Final approval, Requisition of Vendor Code, ZIP Downloads, Document Verification.
 
