@@ -3,10 +3,10 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>User Portal | UTP Vendor Hub</title>
-  <!-- Added FontAwesome for professional icons -->
+  <title>User Portal | UTP Vendor Code Requisition</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <style>
+/* EXACT CSS FROM ADMIN LANDING PAGE FOR CONSISTENCY */
 :root {
   --purple-dark: #2e3a7a;
   --purple-mid: #5a66a8;
@@ -33,8 +33,8 @@ a { text-decoration: none; color: inherit; }
 /* Navbar */
 .navbar {
   width: 100%;
-  background-color: var(--purple-mid);
-  border-bottom: 1px solid var(--purple-dark);
+  background-color: var(--purple-dark); /* Changed to match Admin Navbar */
+  border-bottom: 1px solid #1a224a;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
   position: fixed;
   top: 0;
@@ -51,17 +51,29 @@ a { text-decoration: none; color: inherit; }
   align-items: center;
 }
 
+.logo-container {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
 .logo {
-  height: 60px; 
+  height: 50px; 
   width: auto;
   transition: transform 0.3s ease;
 }
-
 .logo:hover { transform: scale(1.05); }
 
+.logo-text {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: white;
+    letter-spacing: 1px;
+}
+
 .login-btn {
-  background-color: var(--green-soft);
-  color: #2f4c3d;
+  background-color: var(--mimos-magenta); /* Changed to match Admin Button */
+  color: white;
   padding: 0.75rem 1.5rem;
   border-radius: 0.5rem;
   font-size: 1rem;
@@ -72,7 +84,7 @@ a { text-decoration: none; color: inherit; }
 }
 
 .login-btn:hover {
-  background-color: var(--green-hover);
+  background-color: #c49235;
   transform: translateY(-2px);
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
 }
@@ -80,7 +92,7 @@ a { text-decoration: none; color: inherit; }
 /* Hero Section */
 .hero {
   padding: 10rem 1.5rem 6rem;
-  background: linear-gradient(135deg, var(--neutral-bg) 0%, white 100%);
+  background: linear-gradient(to bottom, var(--neutral-bg), white);
   text-align: center;
 }
 
@@ -112,11 +124,11 @@ a { text-decoration: none; color: inherit; }
 .hero-text p {
   font-size: 1.2rem;
   color: var(--text-secondary);
-  max-width: 700px;
+  max-width: 800px;
   margin: 0 auto;
 }
 
-/* Features Section (Redesigned for Professional Look) */
+/* Features Section */
 .features {
   background-color: white;
   padding: 5rem 1.5rem;
@@ -173,7 +185,6 @@ a { text-decoration: none; color: inherit; }
   }
 }
 
-/* Professional Card Design */
 .feature-card {
   background: white;
   padding: 3rem 2rem;
@@ -246,7 +257,7 @@ a { text-decoration: none; color: inherit; }
 
 /* CTA Section */
 .cta {
-  background-color: var(--purple-mid);
+  background-color: var(--purple-dark); /* Matched with Admin */
   color: white;
   text-align: center;
   padding: 5rem 1rem;
@@ -275,8 +286,7 @@ a { text-decoration: none; color: inherit; }
 
 /* Footer */
 footer {
-  background-color: white;
-  border-top: 1px solid #eee;
+  background-color: var(--purple-light);
   padding: 3rem 1rem;
   text-align: center;
 }
@@ -287,15 +297,12 @@ footer img {
   height: 60px;
   width: auto;
   margin-bottom: 1rem;
-  opacity: 0.8;
-  transition: opacity 0.3s;
 }
-
-footer img:hover { opacity: 1; }
 
 .copyright {
   color: var(--text-secondary);
   font-size: 0.9rem;
+  margin-top: 1rem;
 }
 </style>
 </head>
@@ -304,8 +311,11 @@ footer img:hover { opacity: 1; }
   <!-- Navbar -->
   <nav class="navbar">
     <div class="navbar-container">
-      <img src="image/logo.png" alt="UTP Logo" class="logo" />
-      <a href="User/login.php" class="login-btn">Login Now</a>
+        <div class="logo-container">
+            <img src="image/utp_logo.png" alt="UTP Logo" class="logo" />
+            <div class="logo-text">UTP VCR</div>
+        </div>
+      <a href="user/login.php" class="login-btn">Login Now</a>
     </div>
   </nav>
 
@@ -314,8 +324,8 @@ footer img:hover { opacity: 1; }
     <div class="hero-container">
       <div class="hero-text">
         <h1>UTP VCR</h1>
-        <h2>Code Creation & Verification</h2>
-        <p>The UTP VCR (Vendor Code Requisition) website is a centralized platform designed to facilitate the process of customers obtaining an official vendor code from UTP administrators.</p>
+        <h2>Secure Document Verification & Code Requisition</h2>
+        <p>The UTP VCR (Vendor Code Requisition) website is a centralized platform designed to facilitate the process of customers issuing an official Vendor Code.</p>
       </div>
     </div>
   </section>
@@ -367,7 +377,6 @@ footer img:hover { opacity: 1; }
     <div class="cta-container">
       <h2>Universiti Teknologi PETRONAS</h2>
       <p>Streamlining the vendor requisition process through secure digital verification.</p>
-     
     </div>
   </section>
 

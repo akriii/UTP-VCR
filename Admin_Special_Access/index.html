@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Admin Portal | UTP Vendor Hub</title>
+  <title>Admin Portal | UTP Vendor Code Requisition</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <style>
 /* Reusing the exact same CSS variables and structure */
 :root {
@@ -32,7 +33,7 @@ a { text-decoration: none; color: inherit; }
 /* Navbar */
 .navbar {
   width: 100%;
-  background-color: var(--purple-dark); /* Darker for Admin distinction */
+  background-color: var(--purple-dark);
   border-bottom: 1px solid #1a224a;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
   position: fixed;
@@ -50,16 +51,29 @@ a { text-decoration: none; color: inherit; }
   align-items: center;
 }
 
+.logo-container {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
 .logo {
-  height: 60px;
+  height: 50px; /* Adjusted to fit nicely */
   width: auto;
   transition: transform 0.3s ease;
 }
 
 .logo:hover { transform: scale(1.05); }
 
+.logo-text {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: white;
+    letter-spacing: 1px;
+}
+
 .login-btn {
-  background-color: var(--mimos-magenta); /* Different color for Admin button */
+  background-color: var(--mimos-magenta); 
   color: white;
   padding: 0.75rem 1.5rem;
   border-radius: 0.5rem;
@@ -80,6 +94,7 @@ a { text-decoration: none; color: inherit; }
 .hero {
   padding: 10rem 1.5rem 6rem;
   background: linear-gradient(to bottom, var(--neutral-bg), white);
+  text-align: center; 
 }
 
 .hero-container {
@@ -87,88 +102,79 @@ a { text-decoration: none; color: inherit; }
   margin: 0 auto;
   display: flex;
   flex-direction: column;
-  gap: 3rem;
-  align-items: center;
+  justify-content: center; 
+  align-items: center; 
+  min-height: 40vh; 
 }
 
-@media (min-width: 992px) {
-  .hero-container {
-    flex-direction: row;
-    align-items: center;
-    gap: 4rem;
-  }
+.hero-text { 
+  width: 100%;
+  max-width: 800px; 
+  padding: 0 1rem; 
+  margin: 0 auto; 
 }
-
-.hero-text { flex: 1; padding: 0 1rem; }
 
 .hero-text h1 {
-  font-size: 2.8rem;
+  font-size: 3.5rem; 
   font-weight: 800;
-  margin-bottom: 0.75rem;
+  margin-bottom: 1rem;
   color: var(--purple-dark);
   line-height: 1.2;
 }
 
 .hero-text h2 {
-  font-size: 1.8rem;
+  font-size: 2rem;
   font-weight: 600;
-  margin-bottom: 1.5rem;
+  margin-bottom: 2rem;
   color: var(--mimos-magenta);
 }
 
 .hero-text p {
-  font-size: 1.15rem;
+  font-size: 1.2rem;
   margin-bottom: 2rem;
   color: var(--text-secondary);
-  max-width: 600px;
+  max-width: 100%;
 }
 
-.hero-image { flex: 1; position: relative; max-width: 600px; }
-
-.hero-image img {
-  width: 100%;
-  border-radius: 1rem;
-  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
-  transition: transform 0.5s ease;
+/* --- Verification & Flow Section --- */
+.flow-section {
+  background-color: white;
+  padding: 5rem 1.5rem;
 }
-.hero-image:hover img { transform: scale(1.02); }
+.flow-container { max-width: 1000px; margin: 0 auto; }
 
-/* Features Section */
+.flow-title {
+  text-align: center;
+  margin-bottom: 3rem;
+}
+.flow-title h2 { color: var(--purple-dark); font-size: 2rem; margin-bottom: 0.5rem; }
+.flow-title p { color: var(--text-secondary); font-size: 1.1rem; }
+
+
+.verification-steps {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 2rem;
+  margin-bottom: 4rem;
+}
+
+.step-card {
+  background: var(--purple-light);
+  padding: 1.5rem;
+  border-radius: 0.75rem;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+  text-align: left;
+  border-left: 5px solid var(--purple-dark);
+}
+
+.step-card h3 { color: var(--mimos-magenta); font-size: 1.2rem; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 10px; }
+.step-card p { font-size: 0.95rem; color: var(--text-secondary); }
+
+/* --- Admin Roles Section (Simplified) --- */
 .features {
   background-color: var(--purple-light);
   padding: 6rem 1.5rem;
   text-align: center;
-}
-
-.features-container { max-width: 1200px; margin: 0 auto; }
-
-.features h2 {
-  font-size: 2.4rem;
-  font-weight: 700;
-  color: var(--purple-dark);
-  margin-bottom: 3rem;
-  position: relative;
-  display: inline-block;
-}
-
-.features h2::after {
-  content: '';
-  position: absolute;
-  bottom: -10px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 80px;
-  height: 4px;
-  background-color: var(--mimos-magenta);
-  border-radius: 2px;
-}
-
-.feature-grid {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 2.5rem;
-  justify-content: center;
-  margin-top: 3rem;
 }
 
 @media (min-width: 768px) {
@@ -180,50 +186,33 @@ a { text-decoration: none; color: inherit; }
 
 .feature-card {
   background-color: white;
-  padding: 2.5rem 2rem;
+  padding: 2rem;
   border-radius: 1rem;
   box-shadow: 0 6px 12px rgba(0, 0, 0, 0.05);
-  width: 100%;
   text-align: center;
   transition: all 0.3s ease;
   margin: 0 auto;
 }
 
-.feature-card:hover {
-  transform: translateY(-10px);
-  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
-}
-
 .icon-placeholder {
-  width: 60px;
-  height: 60px;
-  background-color: var(--purple-dark); /* Darker icon for admin */
+  width: 50px;
+  height: 50px;
+  background-color: var(--purple-dark); 
   border-radius: 50%;
-  margin: 0 auto 1.5rem;
+  margin: 0 auto 1rem;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.5rem;
+  font-size: 1.2rem;
   color: white;
   font-weight: bold;
 }
+.feature-card h3 { color: var(--text-main); font-size: 1.2rem; margin-bottom: 0.5rem; }
+.feature-card p { font-size: 0.9rem; color: var(--text-secondary); }
 
-.feature-card h3 {
-  font-size: 1.4rem;
-  color: var(--text-main);
-  margin-bottom: 1rem;
-  font-weight: 700;
-}
-
-.feature-card p {
-  font-size: 1.0rem;
-  color: var(--text-secondary);
-  line-height: 1.6;
-}
-
-/* CTA Section */
+/* CTA Section (Security Focus) */
 .cta {
-  background-color: var(--purple-mid);
+  background-color: var(--purple-dark);
   color: white;
   text-align: center;
   padding: 5rem 1rem;
@@ -231,36 +220,26 @@ a { text-decoration: none; color: inherit; }
   overflow: hidden;
 }
 
-.cta::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiPjxkZWZzPjxwYXR0ZXJuIGlkPSJwYXR0ZXJuIiB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHBhdHRlcm5Vbml0cz0idXNlclNwYWNlT25Vc2UiIHBhdHRlcm5UcmFuc2Zvcm09InJvdGF0ZSg0NSkiPjxyZWN0IHdpZHRoPSIyMCIgaGVpZ2h0PSIyMCIgZmlsbD0icmdiYSgyNTUsMjU1LDI1NSwwLjA1KSIvPjwvcGF0dGVybj48L2RlZnM+PHJlY3Qgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgZmlsbD0idXJsKCNwYXR0ZXJuKSIvPjwvc3ZnPg==');
-  opacity: 0.5;
-}
-
-.cta-container {
-  max-width: 800px;
+.security-points {
+  max-width: 900px;
   margin: 0 auto;
-  position: relative;
-  z-index: 1;
+  text-align: left;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1.5rem;
+  margin-top: 2rem;
 }
 
-.cta h2 {
-  font-size: 2.4rem;
-  font-weight: 700;
-  margin-bottom: 1.5rem;
-  line-height: 1.3;
+.security-point {
+  background: rgba(255, 255, 255, 0.1);
+  padding: 1rem;
+  border-radius: 0.5rem;
+  border-left: 3px solid var(--mimos-magenta);
 }
 
-.cta p {
-  font-size: 1.2rem;
-  margin-bottom: 1rem;
-  line-height: 1.6;
-}
+.security-point h4 { color: var(--green-soft); font-size: 1.1rem; margin-bottom: 0.5rem; }
+.security-point p { font-size: 0.9rem; opacity: 0.8; }
+
 
 /* Footer */
 footer {
@@ -272,19 +251,12 @@ footer {
 .footer-container { max-width: 1200px; margin: 0 auto; }
 
 footer img {
-  height: 70px;
+  height: 60px;
   width: auto;
   margin-bottom: 1.5rem;
-  transition: transform 0.3s ease;
 }
 
-footer img:hover { transform: scale(1.05); }
-
-.copyright {
-  color: var(--text-secondary);
-  font-size: 0.9rem;
-  margin-top: 1.5rem;
-}
+.copyright { color: var(--text-secondary); font-size: 0.9rem; margin-top: 1.5rem; }
 </style>
 </head>
 <body>
@@ -292,7 +264,10 @@ footer img:hover { transform: scale(1.05); }
 <!-- Navbar -->
 <nav class="navbar">
   <div class="navbar-container">
-    <img src="../image/utp_logo.png" alt="UTP Logo" class="logo" />
+    <div class="logo-container">
+        <img src="../image/utp_logo.png" alt="UTP Logo" class="logo" />
+        <div class="logo-text">UTP VCR</div>
+    </div>
     <a href="login_admin.php" class="login-btn">Admin Login</a>
   </div>
 </nav>
@@ -302,56 +277,98 @@ footer img:hover { transform: scale(1.05); }
   <div class="hero-container">
     <div class="hero-text">
       <h1>UTP VCR</h1>
-      <h2>Administration Portal</h2>
-      <p>Restricted access for UTP Administrators to verify documents, manage applications, and requisition of vendor codes.</p>
+      <h2>Secure Document Verification & Code Requisition</h2>
+      <p>The UTP Vendor Code Requisition (VCR) website functions as a secure request and approval gateway. Administrators access the platform to strictly review and verify customer applications and sensitive financial documents before issuing a Vendor Code, maintaining high standards of security and compliance.</p>
     </div>
-    
+  </div>
 </section>
 
-<!-- Features -->
+<!-- Verification Process Flow -->
+<section class="flow-section">
+  <div class="flow-container">
+    <div class="flow-title">
+      <h2>The Verification Process Flow</h2>
+      <p>Ensuring authenticity of identity and financial compliance.</p>
+    </div>
+
+    <div class="verification-steps">
+      <div class="step-card">
+        <h3><i class="fas fa-1"></i> Customer Submission</h3>
+        <p>Applicants submit their application forms and upload all required documents (IC, bank statements, etc.) via the segregated public portal.</p>
+      </div>
+      
+      <div class="step-card">
+        <h3><i class="fas fa-2"></i> Document Review</h3>
+        <p>KYC6 Administrators review documents, conducting both manual and automated verification checks on identity data.</p>
+      </div>
+      
+      <div class="step-card">
+        <h3><i class="fas fa-3"></i> Final Requisition</h3>
+        <p>Master Admin verifies all documents, and initiates the vendor code requisition process based on successful background checks.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- Admin Roles Section -->
 <section class="features">
   <div class="features-container">
-    <h2>Admin Roles</h2>
+    <h2>Administrative Responsibilities</h2>
     <div class="feature-grid">
       
       <!-- KYC6 Admin -->
       <div class="feature-card">
-        <div class="icon-placeholder">KYC</div>
+        <div class="icon-placeholder"><i class="fas fa-shield-alt"></i></div>
         <h3>KYC6 Admin</h3>
-        <p>Performs identity background checks. Validates KYC6 compliance documents.</p>
+        <p>Performs background checks to verify the user's compliance record is clean.</p>
       </div>
 
       <!-- AE Admin -->
       <div class="feature-card">
-        <div class="icon-placeholder">AE</div>
+        <div class="icon-placeholder"><i class="fas fa-user-tie"></i></div>
         <h3>AE Admin</h3>
-        <p>Verifies the legitimacy of External Appointments they referred. Validates appointment letters.</p>
+        <p>Serves purely as a referral link for External Appointments; monitors progress but does not perform primary verification.</p>
       </div>
 
       <!-- Master Admin -->
       <div class="feature-card">
-        <div class="icon-placeholder">M</div>
+        <div class="icon-placeholder"><i class="fas fa-cogs"></i></div>
         <h3>Master Admin</h3>
-        <p>Final authority to generate vendor codes, manage system users, and verify all user documents.</p>
+        <p>Reviews and verifies all uploaded documents and submits the final request for Vendor Code issuance.</p>
       </div>
 
     </div>
   </div>
 </section>
 
-<!-- CTA Section -->
+<!-- CTA Section (Security Focus) -->
 <section class="cta">
   <div class="cta-container">
-    <h2>System Security & Integrity</h2>
-    <p>Ensure strict compliance with data protection policies when handling user information.</p>
-    <p>Unauthorized access is strictly prohibited.</p>
+    <h2>System Security & Data Integrity</h2>
+    <p>The system is built on a highly segregated architecture to protect UTP and user data.</p>
+    
+    <div class="security-points">
+      <div class="security-point">
+        <h4><i class="fas fa-lock"></i> Segregated Access</h4>
+        <p>Administrators and customers use distinct entry points, ensuring private admin functions are inaccessible to the public user base.</p>
+      </div>
+      <div class="security-point">
+        <h4><i class="fas fa-fingerprint"></i> Face Verification</h4>
+        <p>Manual identity check compares face capture by admin against IC picture data to prevent identity fraud during registration.</p>
+      </div>
+      <div class="security-point">
+        <h4><i class="fas fa-database"></i> Secure Data Handling</h4>
+        <p>All sensitive information is processed using Prepared Statements to prevent SQL injection, maintaining data integrity.</p>
+      </div>
+    </div>
   </div>
 </section>
 
 <!-- Footer -->
 <footer>
   <div class="footer-container">
-    <img src="../image/logo.png" alt="UTP Footer Logo" />
+    <img src="../image/utp_logo.png" alt="UTP Footer Logo" />
     <p class="copyright">© 2025 UTP Vendor Hub System. Admin Access Only.</p>
   </div>
 </footer>
