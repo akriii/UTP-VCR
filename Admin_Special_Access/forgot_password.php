@@ -33,7 +33,6 @@ function sendVerificationCode($email, $code) {
 
         $mail = new PHPMailer(true);
         
-        // SMTP configuration - USE THE WORKING SETTINGS
         $mail->isSMTP();
         $mail->Host = 'smtp.gmail.com';
         $mail->SMTPAuth = true;
@@ -42,7 +41,7 @@ function sendVerificationCode($email, $code) {
         $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
         $mail->Port = 587;
         
-        // Disable debug for production
+        
         $mail->SMTPDebug = 0;
         $mail->Timeout = 30;
         $mail->CharSet = 'UTF-8';
@@ -79,7 +78,7 @@ function sendVerificationCode($email, $code) {
     }
 }
 
-// Handle AJAX Send Code request
+
 if (isset($_POST['ajax_send_code'])) {
     $email = trim($_POST['email']);
     $response = ['success' => false, 'message' => ''];
@@ -91,20 +90,17 @@ if (isset($_POST['ajax_send_code'])) {
         $response['message'] = 'Please enter a valid email address.';
         error_log("❌ Invalid email format");
     } else {
-        // Generate and store verification code
+        
         $verification_code = generateVerificationCode();
         $expiry_time = date('Y-m-d H:i:s', strtotime('+10 minutes'));
         
-        // Store code in session
+        
         $_SESSION['verification_code'] = $verification_code;
         $_SESSION['verification_email'] = $email;
         $_SESSION['code_expiry'] = $expiry_time;
         
         error_log("Generated code: $verification_code");
-        //error_log("Session verification_code: " . ($_SESSION['verification_code'] ?? 'NOT SET'));
-        //error_log("Session verification_email: " . ($_SESSION['verification_email'] ?? 'NOT SET'));
         
-        // DIRECTLY call the email function
         $email_sent = sendVerificationCode($email, $verification_code);
         
         error_log("Email sent result: " . ($email_sent ? 'TRUE' : 'FALSE'));
@@ -124,14 +120,14 @@ if (isset($_POST['ajax_send_code'])) {
     exit();
 }
 
-// Handle form submission
+
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['signup'])) {
     $email = trim($_POST['email']);
     $password = $_POST['password'];
     $re_enter_password = $_POST['re_enter_password'];
     $entered_code = trim($_POST['code']);
 
-    // Validate verification code
+  
     if (!isset($_SESSION['verification_code']) || !isset($_SESSION['verification_email'])) {
         echo "<script>alert('Please request a verification code first.');</script>";
     } elseif ($_SESSION['verification_email'] !== $email) {
@@ -147,14 +143,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['signup'])) {
     } elseif ($password !== $re_enter_password) {
         echo "<script>alert('Passwords do not match. Please try again.');</script>";
     } else {
-        // Check if email already exists
-       
-
-       
-        // Hash the password
+        
     $hashed = password_hash($password, PASSWORD_DEFAULT);
 
-        // Insert new password 
+         
     $stmt = mysqli_prepare($db, "UPDATE admin SET admin_password = ? WHERE admin_email = ?");
     if (!$stmt) {
         die("Prepare failed: " . mysqli_error($db));
@@ -164,7 +156,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['signup'])) {
         if (mysqli_stmt_execute($stmt)) {
                
                 
-            // Clear verification session
+            
             unset($_SESSION['verification_code']);
             unset($_SESSION['verification_email']);
             unset($_SESSION['code_expiry']);
@@ -187,7 +179,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['signup'])) {
 <head>
     <title>Forgot Password</title>
     <style>
-        /* Your existing CSS styles remain the same */
+       
         body {
             font-family: Arial, sans-serif;
             background: #f5f5f5;
@@ -329,11 +321,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['signup'])) {
 <div class="container">
     <h2>Password Reset</h2>
     
-    <!--<div class="info-box">
-        <strong>Note:</strong> This is a request form. Your account will be activated after admin approval.
-    </div>-->
     
-    <!-- Alert messages -->
+   
     <div id="alertMessage" class="alert"></div>
     
     <form action="forgot_password.php" method="POST" id="resetPassForm">
@@ -432,13 +421,13 @@ document.addEventListener('DOMContentLoaded', function() {
         }, 5000);
     }
 
-    // Enable/disable send code button based on email validity
+    
     email.addEventListener('input', function() {
         const emailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.value);
         sendCodeBtn.disabled = !emailValid;
     });
 
-    // Handle Send Code button with AJAX
+    
     sendCodeBtn.addEventListener('click', function() {
         const emailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.value);
         
@@ -447,12 +436,12 @@ document.addEventListener('DOMContentLoaded', function() {
             return false;
         }
         
-        // Show loading and disable button
+        
         loading.style.display = 'block';
         this.disabled = true;
         this.textContent = 'Sending...';
         
-        // Send AJAX request
+        
         const formData = new FormData();
         formData.append('ajax_send_code', 'true');
         formData.append('email', email.value);
@@ -468,7 +457,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if (data.success) {
                 showAlert(data.message, 'success');
                 sendCodeBtn.textContent = 'Code Sent';
-                // Start timer for 10 minutes
+                
                 startTimer(600);
             } else {
                 showAlert(data.message, 'error');
@@ -485,7 +474,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // Form submission validation
+    
     form.addEventListener('submit', function(e) {
         if (password.value !== reEnterPassword.value) {
             e.preventDefault();
@@ -494,7 +483,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // Initialize
+    
     validatePasswords();
     
     // If we have an active timer from previous submission, restart it

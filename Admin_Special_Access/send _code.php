@@ -1,5 +1,5 @@
 <?php
-// This file is included by signup_admin.php to send verification emails
+
 session_start();
 require '../vendor/autoload.php';
 use PHPMailer\PHPMailer\PHPMailer;
@@ -14,19 +14,19 @@ function sendVerificationCode($email, $code) {
 
         $mail = new PHPMailer(true);
         
-        // SMTP configuration - TRY DIFFERENT SETTINGS
+        // SMTP configuration 
         $mail->isSMTP();
         $mail->Host = 'smtp.gmail.com';
         $mail->SMTPAuth = true;
         $mail->Username = $_ENV['SMTP_USER'];
         $mail->Password = $_ENV['SMTP_PASS'];
         
-        // Try both SSL and TLS to see which works
-        $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS; // or 'ssl'
-        $mail->Port = 587; // or 465 for SSL
         
-        // Debugging - enable to see what's happening
-        $mail->SMTPDebug = 2; // Set to 2 to see detailed debug info
+        $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS; 
+        $mail->Port = 587; 
+        
+        
+        $mail->SMTPDebug = 2; 
         $mail->Debugoutput = function($str, $level) {
             error_log("PHPMailer Debug (Level $level): $str");
         };
@@ -69,14 +69,14 @@ function sendVerificationCode($email, $code) {
     }
 }
 
-// Get email and code from session
+
 if (isset($_SESSION['verification_email']) && isset($_SESSION['verification_code'])) {
     $email = $_SESSION['verification_email'];
     $code = $_SESSION['verification_code'];
     
     error_log("Session data - Email: $email, Code: $code");
     
-    // Send the email and return result
+    
     $result = sendVerificationCode($email, $code);
     error_log("Final result: " . ($result ? 'true' : 'false'));
     return $result;

@@ -5,19 +5,19 @@ ini_set('display_errors', 1);
 include "../config.php"; 
 session_start(); 
 
-// If already logged in, go to admin dashboard
+
 
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $email = trim($_POST['email']); 
     $password = $_POST['password'];
 
-    // Check database connection
+    
     if (!$db) {
         die("Database connection failed.");
     }
 
-    // Get the stored hash for this email from admin table
+    
     $stmt = mysqli_prepare($db, "SELECT admin_id, admin_name, admin_email, admin_role, admin_password FROM admin WHERE admin_email = ?");
     if (!$stmt) {
         die("Prepare failed: " . mysqli_error($db));
@@ -31,11 +31,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     mysqli_stmt_bind_result($stmt, $admin_id, $admin_name, $admin_email, $admin_role, $hashed_password);
     mysqli_stmt_fetch($stmt);
 
-    // Verify password
+    
     $password_verify_result = password_verify($password, $hashed_password);
 
     if ($password_verify_result) {
-        // Password is correct (hashed)
+        
         session_regenerate_id(true);
 
         $_SESSION['admin_id'] = $admin_id;
@@ -99,12 +99,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         align-items: center; 
         height: 100vh; 
         margin: 0; 
-        /* Removed flex-direction column so we can center the wrapper easily */
+        
     }
 
-    /* NEW: This wrapper holds the box and acts as the anchor 
-       for the logo.
-    */
+    
     .login-wrapper {
         position: relative; 
     }
@@ -116,33 +114,32 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         left: 0;
         width: 100%;
         text-align: center;
-        margin-bottom: 25px; /* Adjust gap between title and box */
-        /* Ensure the content stacks upwards */
+        margin-bottom: 25px; 
         display: flex;
         flex-direction: column;
         align-items: center;
         justify-content: flex-end;
     }
 
-    /* NEW: Corporate styling for the title */
+
     .system-title {
         font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
         font-size: 24px;
         font-weight: 700;
-        color: #2e3a7a; /* Deep UTP Blue */
-        text-transform: uppercase; /* Makes it look like a system name */
-        letter-spacing: 2px; /* Adds elegance and readability */
-        margin-top: 15px; /* Space between logo and text */
+        color: #2e3a7a; 
+        text-transform: uppercase; 
+        letter-spacing: 2px; 
+        margin-top: 15px; 
         margin-bottom: 0;
-        text-shadow: 1px 1px 0px rgba(255,255,255,0.5); /* Subtle depth */
+        text-shadow: 1px 1px 0px rgba(255,255,255,0.5); 
     }
 
-    /* Update existing h2 to be slightly smaller to show hierarchy */
+    
     .container h2 { 
         text-align: center; 
         margin-bottom: 25px; 
-        font-size: 20px; /* Reduced from 26px to focus on the System Title */
-        color: #666;     /* Lighter color for the subtitle */
+        font-size: 20px; 
+        color: #666;     
         font-weight: 600;
         text-transform: uppercase;
         letter-spacing: 1px;
@@ -217,7 +214,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         text-decoration: underline;
     }
 
-    /* Password Toggle Styles */
+    
     .password-container {
         position: relative;
         width: 100%;

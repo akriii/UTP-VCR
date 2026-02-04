@@ -4,40 +4,39 @@ include('../config.php');
 session_start();
 
 
-// If the user is already logged in, redirect them
+
 if (isset($_SESSION['admin_id'])) {
     header("Location: homepage.php");
     exit();
 }
 
-// Check if database connection exists
+
 if (!$db) {
     die("Database connection failed. Please check your config.php file.");
 }
 
-// Import required classes
+
 require '../vendor/autoload.php';
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
 use Dotenv\Dotenv;
 
-// Function to generate 6-digit code
+
 function generateVerificationCode() {
     return sprintf("%06d", mt_rand(1, 999999));
 }
 
-// Function to send verification email
-// This function is INSIDE signup_admin.php
+
 
 function sendVerificationCode($email, $code) {
     try {
-        // Load environment variables (THIS PATH IS LIKELY CORRECT)
+
         $dotenv = Dotenv::createImmutable(__DIR__ . '/..'); 
         $dotenv->load();
 
         $mail = new PHPMailer(true);
         
-        // SMTP configuration
+        
         $mail->isSMTP();
         $mail->Host = 'smtp.gmail.com';
         $mail->SMTPAuth = true;
@@ -46,15 +45,14 @@ function sendVerificationCode($email, $code) {
         $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
         $mail->Port = 587;
         
-        // --- THIS IS THE CORRECT WAY TO DEBUG ---
-        // 1. Keep debug at 0 so it doesn't break your JSON
+       
         $mail->SMTPDebug = 0; 
         
-        // 2. Tell PHPMailer to send debug info to your error_log
+        
         $mail->Debugoutput = function($str, $level) {
             error_log("PHPMailer Debug (Level $level): $str");
         };
-        // --- END DEBUG SETUP ---
+        
 
         $mail->Timeout = 30;
         $mail->CharSet = 'UTF-8';
@@ -78,7 +76,7 @@ function sendVerificationCode($email, $code) {
         if ($result) {
             error_log("✅ EMAIL SENT SUCCESSFULLY TO: $email");
         } else {
-            // If it fails, the error log will now contain the PHPMailer debug info
+            
             error_log("❌ EMAIL FAILED: " . $mail->ErrorInfo);
         }
         
@@ -90,23 +88,21 @@ function sendVerificationCode($email, $code) {
     }
 }
 
-// Handle AJAX Send Code request
-// Handle AJAX Send Code request
-// Handle AJAX Send Code request
+
 if (isset($_POST['ajax_send_code'])) {
-    // Clear any previous output
+    
     while (ob_get_level()) {
         ob_end_clean();
     }
     
     header('Content-Type: application/json');
     
-    // Prevent any other output
+
     register_shutdown_function(function() {
         if (error_get_last()) {
             $error = error_get_last();
             if ($error['type'] & (E_ERROR | E_PARSE | E_CORE_ERROR | E_COMPILE_ERROR | E_USER_ERROR | E_RECOVERABLE_ERROR)) {
-                // Log the error but don't output it
+                
                 error_log("PHP Error in AJAX handler: " . $error['message']);
             }
         }
@@ -145,7 +141,7 @@ if (isset($_POST['ajax_send_code'])) {
 }
 
 
-// Handle form submission
+
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['signup'])) {
     $full_name = trim($_POST['full_name']?? '');
     $email = trim($_POST['email'] ?? '');
@@ -155,7 +151,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['signup'])) {
     $re_enter_password = $_POST['re_enter_password']?? '';
     $entered_code = trim($_POST['code']?? '');
 
-    // Validate verification code
     if (!isset($_SESSION['verification_code']) || !isset($_SESSION['verification_email'])) {
         echo "<script>alert('Please request a verification code first.');</script>";
     } elseif ($_SESSION['verification_email'] !== $email) {
@@ -171,14 +166,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['signup'])) {
     } elseif ($password !== $re_enter_password) {
         echo "<script>alert('Passwords do not match. Please try again.');</script>";
     } else {
-        // Check if email already exists - FIXED: use $check instead of $stmt
+        
         $check = mysqli_prepare($db, "SELECT admin_email FROM admin WHERE admin_email = ? 
                                   UNION SELECT request_email FROM request_admin WHERE request_email = ? AND request_status = 'pending'");
         if (!$check) {
             die("Prepare failed: " . mysqli_error($db));
         }
         
-        // FIXED: Use $check instead of $stmt
+        
         mysqli_stmt_bind_param($check, "ss", $email, $email);
         mysqli_stmt_execute($check);
         mysqli_stmt_store_result($check);
@@ -186,23 +181,23 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['signup'])) {
         if (mysqli_stmt_num_rows($check) > 0) {
             echo "<script>alert('Email already registered or has a pending request. Please login or wait for approval.');</script>";
         } else {
-            // Hash the password
+            
             $hashed = password_hash($password, PASSWORD_DEFAULT);
 
-            // Insert new admin request - FIXED: Correct number of placeholders
+            
             $stmt = mysqli_prepare($db, "INSERT INTO request_admin (request_name, request_role, request_email, request_password,request_staff_id, request_status) VALUES (?, ?, ?, ?, ?, 'Pending')");
             if (!$stmt) {
                 die("Prepare failed: " . mysqli_error($db));
             }
             
-            // FIXED: Include $admin_role in the binding and correct parameter order
+            
             mysqli_stmt_bind_param($stmt, "sssss", $full_name, $admin_role, $email, $hashed, $staff_id);
 
             if (mysqli_stmt_execute($stmt)) {
-                // Get the last inserted ID
+                
                 $request_id = mysqli_insert_id($db);
                 
-                // Create notification
+                
                 $message = "$full_name has requested to become an admin.";
                 $notification_stmt = mysqli_prepare($db, "UPDATE request_admin SET request_message = ? WHERE request_id = ?");
                 if ($notification_stmt) {
@@ -211,7 +206,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['signup'])) {
                     mysqli_stmt_close($notification_stmt);
                 }
                 
-                // Clear verification session
+                
                 unset($_SESSION['verification_code']);
                 unset($_SESSION['verification_email']);
                 unset($_SESSION['code_expiry']);
@@ -234,7 +229,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['signup'])) {
 <head>
     <title>Admin Sign Up</title>
     <style>
-        /* Your existing CSS styles remain the same */
+        
         body {
             font-family: Arial, sans-serif;
             background: #f5f5f5;
@@ -380,7 +375,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['signup'])) {
         <strong>Note:</strong> This is a request form. Your account will be activated after admin approval.
     </div>
     
-    <!-- Alert messages -->
+
     <div id="alertMessage" class="alert"></div>
     
     <form action="signup_admin.php" method="POST" id="signupForm">
@@ -431,7 +426,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const alertMessage = document.getElementById('alertMessage');
     let countdown;
 
-    // Real-time password matching validation
+    
     const password = document.getElementById('password');
     const reEnterPassword = document.getElementById('re_enter_password');
     const matchMessage = document.getElementById('passwordMatchMessage');
@@ -498,7 +493,7 @@ document.addEventListener('DOMContentLoaded', function() {
         sendCodeBtn.disabled = !emailValid;
     });
 
-    // Handle Send Code button with AJAX
+   
     sendCodeBtn.addEventListener('click', function() {
         const emailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.value);
         
@@ -554,10 +549,10 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // Initialize
+    
     validatePasswords();
     
-    // If we have an active timer from previous submission, restart it
+    
       <?php if (isset($_SESSION['code_expiry']) && time() < strtotime($_SESSION['code_expiry'])) { ?>
         const timeLeft = Math.floor((<?php echo strtotime($_SESSION['code_expiry']); ?> - <?php echo time(); ?>) / 1000);
         if (timeLeft > 0) {
