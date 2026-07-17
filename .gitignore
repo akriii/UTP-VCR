@@ -5,34 +5,32 @@
 .env
 
 # System Generated Files & User Uploads
-# We ignore the files inside but keep the folder structure
-/generated_zips/*
-!/generated_zips/.gitkeep
-
-/uploads/*
-!/uploads/.gitkeep
+# We ignore the files inside but keep the folder structure.
+# All upload/output folders now live under documents/
+/documents/generated_zips/*
+!/documents/generated_zips/.gitkeep
 
 # Specific Document Folders (Based on your file structure)
-/kyc6/*
-!/kyc6/.gitkeep
+/documents/kyc6/*
+!/documents/kyc6/.gitkeep
 
-/bank_statement/*
-!/bank_statement/.gitkeep
+/documents/bank_statement/*
+!/documents/bank_statement/.gitkeep
 
-/declaration_form/*
-!/declaration_form/.gitkeep
+/documents/declaration_form/*
+!/documents/declaration_form/.gitkeep
 
-/fyp_form_file/*
-!/fyp_form_file/.gitkeep
+/documents/fyp_form_file/*
+!/documents/fyp_form_file/.gitkeep
 
-/appointment_file/*
-!/appointment_file/.gitkeep
+/documents/appointment_file/*
+!/documents/appointment_file/.gitkeep
 
-/ic_picture/*
-!/ic_picture/.gitkeep
+/documents/ic_picture/*
+!/documents/ic_picture/.gitkeep
 
-/face_captures/*
-!/face_captures/.gitkeep
+/documents/face_captures/*
+!/documents/face_captures/.gitkeep
 
 # OS generated files
 .DS_Store

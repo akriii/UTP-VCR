@@ -1,0 +1,531 @@
+<?php
+session_start();
+include('../../config.php');
+
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
+
+// Debug AJAX requests
+if (isset($_POST['ajax_send_code'])) {
+    error_log("=== AJAX REQUEST RECEIVED ===");
+    error_log("Email: " . ($_POST['email'] ?? 'NOT SET'));
+    error_log("Session ID: " . session_id());
+    
+    // Check if session is active
+    if (session_status() === PHP_SESSION_NONE) {
+        error_log("❌ NO ACTIVE SESSION");
+    }
+}
+
+// If the user is already logged in, redirect them
+if (isset($_SESSION['user_id'])) {
+    header("Location: user_homePage.php");
+    exit();
+}
+
+// Check if database connection exists
+if (!$db) {
+    die("Database connection failed. Please check your config.php file.");
+}
+
+// Import required classes
+require '../../vendor/autoload.php';
+use PHPMailer\PHPMailer\PHPMailer;
+use PHPMailer\PHPMailer\Exception;
+use Dotenv\Dotenv;
+
+// Function to generate 6-digit code
+function generateVerificationCode() {
+    return sprintf("%06d", mt_rand(1, 999999));
+}
+
+// Function to send verification email
+function sendVerificationCode($email, $code) {
+    try {
+        // Load environment variables
+        $dotenv = Dotenv::createImmutable(__DIR__ . '/../..');
+        $dotenv->load();
+
+        $mail = new PHPMailer(true);
+        
+        // SMTP configuration - USE THE WORKING SETTINGS
+        $mail->isSMTP();
+        $mail->Host = 'smtp.gmail.com';
+        $mail->SMTPAuth = true;
+        $mail->Username = $_ENV['SMTP_USER'];
+        $mail->Password = $_ENV['SMTP_PASS'];
+        $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
+        $mail->Port = 587;
+        
+        // Disable debug for production
+        $mail->SMTPDebug = 0;
+        $mail->Timeout = 30;
+        $mail->CharSet = 'UTF-8';
+        
+        $mail->setFrom($_ENV['SMTP_USER'], 'UTP VCR');
+        $mail->addAddress($email);
+        $mail->isHTML(true);
+        $mail->Subject = 'Your Verification Code - UTP VCR';
+        $mail->Body = "
+            <h3>UTP VCR - Verification Code</h3>
+            <p>Your 6-digit verification code is: <strong style='font-size: 24px; color: #414e8d;'>$code</strong></p>
+            <p>This code will expire in 10 minutes.</p>
+            <br><p>Regards,<br>UTP VCR</p>
+        ";
+        
+        $mail->AltBody = "Your verification code is: $code. This code will expire in 10 minutes.";
+
+        error_log("📧 SENDING EMAIL TO: $email");
+        error_log("📧 CODE: $code");
+        
+        $result = $mail->send();
+        
+        if ($result) {
+            error_log("✅ EMAIL SENT SUCCESSFULLY TO: $email");
+        } else {
+            error_log("❌ EMAIL FAILED: " . $mail->ErrorInfo);
+        }
+        
+        return $result;
+        
+    } catch (Exception $e) {
+        error_log("❌ MAILER EXCEPTION: " . $e->getMessage());
+        return false;
+    }
+}
+
+// Handle AJAX Send Code request
+if (isset($_POST['ajax_send_code'])) {
+    $email = trim($_POST['email']);
+    $response = ['success' => false, 'message' => ''];
+    
+    error_log("=== AJAX REQUEST RECEIVED ===");
+    error_log("Email: $email");
+    
+    if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        $response['message'] = 'Please enter a valid email address.';
+        error_log("❌ Invalid email format");
+    } else {
+        // Generate and store verification code
+        $verification_code = generateVerificationCode();
+        $expiry_time = date('Y-m-d H:i:s', strtotime('+10 minutes'));
+        
+        // Store code in session
+        $_SESSION['verification_code'] = $verification_code;
+        $_SESSION['verification_email'] = $email;
+        $_SESSION['code_expiry'] = $expiry_time;
+        
+        error_log("Generated code: $verification_code");
+        
+        // DIRECTLY call the email function
+        $email_sent = sendVerificationCode($email, $verification_code);
+        
+        error_log("Email sent result: " . ($email_sent ? 'TRUE' : 'FALSE'));
+        
+        if ($email_sent) {
+            $response['success'] = true;
+            $response['message'] = 'Verification code sent to your email! Check your inbox and spam folder.';
+            error_log("✅ SUCCESS: Code sent to $email");
+        } else {
+            $response['message'] = 'Failed to send verification code. Please try again.';
+            error_log("❌ FAILED: Could not send to $email");
+        }
+    }
+    
+    header('Content-Type: application/json');
+    echo json_encode($response);
+    exit();
+}
+
+// Handle form submission
+if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['signup'])) {
+    $email = trim($_POST['email']);
+    $password = $_POST['password'];
+    $re_enter_password = $_POST['re_enter_password'];
+    $entered_code = trim($_POST['code']);
+
+    // Validate verification code
+    if (!isset($_SESSION['verification_code']) || !isset($_SESSION['verification_email'])) {
+        echo "<script>alert('Please request a verification code first.');</script>";
+    } elseif ($_SESSION['verification_email'] !== $email) {
+        echo "<script>alert('Email does not match the one we sent the code to.');</script>";
+    } elseif (time() > strtotime($_SESSION['code_expiry'])) {
+        echo "<script>alert('Verification code has expired. Please request a new one.');</script>";
+    } elseif ($_SESSION['verification_code'] !== $entered_code) {
+        echo "<script>alert('Invalid verification code. Please try again.');</script>";
+    } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        echo "<script>alert('Please enter a valid email address.');</script>";
+    } elseif (strlen($password) < 6) {
+        echo "<script>alert('Password must be at least 6 characters.');</script>";
+    } elseif ($password !== $re_enter_password) {
+        echo "<script>alert('Passwords do not match. Please try again.');</script>";
+    } else {
+        // Check if email exists in database
+        $check_email = mysqli_prepare($db, "SELECT user_id FROM user WHERE user_email = ?");
+        mysqli_stmt_bind_param($check_email, "s", $email);
+        mysqli_stmt_execute($check_email);
+        mysqli_stmt_store_result($check_email);
+        
+        if (mysqli_stmt_num_rows($check_email) == 0) {
+            echo "<script>alert('Email not found in our system.');</script>";
+            mysqli_stmt_close($check_email);
+        } else {
+            mysqli_stmt_close($check_email);
+            
+            // Hash the password
+            $hashed = password_hash($password, PASSWORD_DEFAULT);
+
+            // Update password using correct column names
+            $stmt = mysqli_prepare($db, "UPDATE user SET user_password = ? WHERE user_email = ?");
+            if (!$stmt) {
+                die("Prepare failed: " . mysqli_error($db));
+            }
+            mysqli_stmt_bind_param($stmt, "ss", $hashed, $email);
+
+            if (mysqli_stmt_execute($stmt)) {
+                // Clear verification session
+                unset($_SESSION['verification_code']);
+                unset($_SESSION['verification_email']);
+                unset($_SESSION['code_expiry']);
+                    
+                echo "<script>alert('Password reset successful.'); window.location='login.php';</script>";
+                exit();
+            } else {
+                echo "<script>alert('Error: " . addslashes(mysqli_stmt_error($stmt)) . "');</script>";
+            }
+
+            mysqli_stmt_close($stmt);
+        }
+    }
+}
+?>
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Forgot Password</title>
+    <style>
+        /* Your existing CSS styles remain the same */
+        body {
+    font-family: Arial, sans-serif;
+    background: #f5f5f5;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+}
+.container {
+    width: 360px; /* Reduced from 450px */
+    background: #fff;
+    padding: 28px; /* Reduced from 35px */
+    border-radius: 8px; /* Reduced from 10px */
+    box-shadow: 0 0 12px rgba(0,0,0,0.1); /* Reduced from 15px */
+}
+h2 {
+    text-align: center;
+    margin-bottom: 20px; /* Reduced from 25px */
+    font-size: 20.8px; /* Reduced from 26px */
+    color: #333;
+}
+input, select {
+    width: 100%;
+    padding: 9.6px; /* Reduced from 12px */
+    margin-bottom: 14.4px; /* Reduced from 18px */
+    border: 1px solid #ccc;
+    border-radius: 4.8px; /* Reduced from 6px */
+    font-size: 12px; /* Reduced from 15px */
+    box-sizing: border-box;
+}
+button {
+    padding: 9.6px; /* Reduced from 12px */
+    background: #414e8dff;
+    color: white;
+    border: none;
+    border-radius: 4.8px; /* Reduced from 6px */
+    font-size: 12.8px; /* Reduced from 16px */
+    cursor: pointer;
+    transition: 0.3s;
+}
+button:hover {
+    background: #2e3a7a;
+}
+button:disabled {
+    background: #cccccc;
+    cursor: not-allowed;
+}
+p {
+    text-align: center;
+    font-size: 11.2px; /* Reduced from 14px */
+    margin-top: 8px; /* Reduced from 10px */
+}
+a {
+    color: #414e8dff;
+    text-decoration: none;
+}
+a:hover {
+    text-decoration: underline;
+}
+label {
+    font-size: 11.2px; /* Reduced from 14px */
+    font-weight: bold;
+    color: #333;
+    display: block;
+    margin-bottom: 4px; /* Reduced from 5px */
+}
+.password-match {
+    color: green;
+    font-size: 9.6px; /* Reduced from 12px */
+    margin-top: -8px; /* Reduced from -10px */
+    margin-bottom: 8px; /* Reduced from 10px */
+    display: none;
+}
+.password-mismatch {
+    color: red;
+    font-size: 9.6px; /* Reduced from 12px */
+    margin-top: -8px; /* Reduced from -10px */
+    margin-bottom: 8px; /* Reduced from 10px */
+    display: none;
+}
+.info-box {
+    background: #e7f3ff;
+    border: 1px solid #b3d9ff;
+    border-radius: 4.8px; /* Reduced from 6px */
+    padding: 12px; /* Reduced from 15px */
+    margin-bottom: 16px; /* Reduced from 20px */
+    font-size: 11.2px; /* Reduced from 14px */
+}
+.code-section {
+    display: flex;
+    gap: 8px; /* Reduced from 10px */
+}
+.code-section input {
+    flex: 1;
+}
+.btn-send-code {
+    width: auto;
+    height: 36px; /* Reduced from 45px */
+    white-space: nowrap;
+    padding: 9.6px 16px; /* Reduced from 12px 20px */
+}
+.timer {
+    font-size: 9.6px; /* Reduced from 12px */
+    color: #d9534f;
+    margin-top: -8px; /* Reduced from -10px */
+    margin-bottom: 12px; /* Reduced from 15px */
+    text-align: center;
+    font-weight: bold;
+}
+.submit-btn {
+    width: 100%;
+}
+.loading {
+    display: none;
+    color: #414e8dff;
+    text-align: center;
+    margin: 8px 0; /* Reduced from 10px 0 */
+}
+.alert {
+    padding: 8px; /* Reduced from 10px */
+    margin: 8px 0; /* Reduced from 10px 0 */
+    border-radius: 4px; /* Reduced from 5px */
+    display: none;
+}
+.alert-success {
+    background: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+}
+.alert-error {
+    background: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+}
+    </style>
+</head>
+<body>
+<div class="container">
+    <div style="text-align: center; margin-bottom: 20px;">
+        <img src="../../image/UTP.png" alt="UTP Logo" style="max-width: 200px; height: auto;">
+    </div>
+    <h2>UTP VCR Password Reset</h2>
+    
+    <!-- Alert messages -->
+    <div id="alertMessage" class="alert"></div>
+    
+    <form action="reset_password.php" method="POST" id="resetPassForm">
+        
+        <label for="email">Email:</label>
+        <div class="code-section">
+            <input type="email" name="email" id="email" required value="<?php echo isset($_POST['email']) ? htmlspecialchars($_POST['email']) : ''; ?>">
+            <button type="button" id="sendCodeBtn" class="btn-send-code">Send Code</button>
+        </div>
+        <div id="timer" class="timer"></div>
+        <div id="loading" class="loading">Sending code, please wait...</div>
+
+        <label for="code">6-Digit Verification Code:</label>
+        <input type="text" name="code" id="code" required maxlength="6" pattern="[0-9]{6}" placeholder="Enter 6-digit code">
+
+        <label for="password">New Password:</label>
+        <input type="password" name="password" id="password" required minlength="6">
+        
+        <label for="re_enter_password">Re-Enter Password:</label>
+        <input type="password" name="re_enter_password" id="re_enter_password" required>
+        <div id="passwordMatchMessage" class="password-match">Passwords match!</div>
+        <div id="passwordMismatchMessage" class="password-mismatch">Passwords do not match!</div>
+
+        <button type="submit" name="signup" id="submitBtn" class="submit-btn">Reset Password</button>
+    </form>
+    <p>Already have an account? <a href="login.php">Login here</a></p>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const email = document.getElementById('email');
+    const sendCodeBtn = document.getElementById('sendCodeBtn');
+    const timer = document.getElementById('timer');
+    const loading = document.getElementById('loading');
+    const alertMessage = document.getElementById('alertMessage');
+    let countdown;
+
+    // Real-time password matching validation
+    const password = document.getElementById('password');
+    const reEnterPassword = document.getElementById('re_enter_password');
+    const matchMessage = document.getElementById('passwordMatchMessage');
+    const mismatchMessage = document.getElementById('passwordMismatchMessage');
+    const submitBtn = document.getElementById('submitBtn');
+    const form = document.getElementById('resetPassForm');
+    
+    function validatePasswords() {
+        if (password.value === '' || reEnterPassword.value === '') {
+            matchMessage.style.display = 'none';
+            mismatchMessage.style.display = 'none';
+            submitBtn.disabled = false;
+            return;
+        }
+        
+        if (password.value === reEnterPassword.value) {
+            matchMessage.style.display = 'block';
+            mismatchMessage.style.display = 'none';
+            submitBtn.disabled = false;
+        } else {
+            matchMessage.style.display = 'none';
+            mismatchMessage.style.display = 'block';
+            submitBtn.disabled = true;
+        }
+    }
+    
+    password.addEventListener('input', validatePasswords);
+    reEnterPassword.addEventListener('input', validatePasswords);
+
+    // Start countdown timer
+    function startTimer(duration) {
+        clearInterval(countdown);
+        let timeLeft = duration;
+        
+        countdown = setInterval(function() {
+            const minutes = Math.floor(timeLeft / 60);
+            const seconds = timeLeft % 60;
+            
+            timer.textContent = `Code expires in: ${minutes}:${seconds.toString().padStart(2, '0')}`;
+
+            
+            if (--timeLeft < 0) {
+                clearInterval(countdown);
+                timer.textContent = 'Code expired. Please request a new one.';
+                sendCodeBtn.disabled = false;
+                sendCodeBtn.textContent = 'Send Code';
+            }
+        }, 1000);
+    }
+
+    // Show alert message
+    function showAlert(message, type) {
+        alertMessage.textContent = message;
+        alertMessage.className = 'alert ' + (type === 'success' ? 'alert-success' : 'alert-error');
+        alertMessage.style.display = 'block';
+        
+        setTimeout(() => {
+            alertMessage.style.display = 'none';
+        }, 5000);
+    }
+
+    // Enable/disable send code button based on email validity
+    email.addEventListener('input', function() {
+        const emailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.value);
+        sendCodeBtn.disabled = !emailValid;
+    });
+
+    // Handle Send Code button with AJAX
+    sendCodeBtn.addEventListener('click', function() {
+        const emailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.value);
+        
+        if (!emailValid) {
+            showAlert('Please enter a valid email address before sending code.', 'error');
+            return false;
+        }
+        
+        // Show loading and disable button
+        loading.style.display = 'block';
+        this.disabled = true;
+        this.textContent = 'Sending...';
+        
+        // Send AJAX request
+        const formData = new FormData();
+        formData.append('ajax_send_code', 'true');
+        formData.append('email', email.value);
+        
+        fetch('reset_password.php', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            loading.style.display = 'none';
+            
+            if (data.success) {
+                showAlert(data.message, 'success');
+                sendCodeBtn.textContent = 'Code Sent';
+                // Start timer for 10 minutes
+                startTimer(600);
+            } else {
+                showAlert(data.message, 'error');
+                sendCodeBtn.disabled = false;
+                sendCodeBtn.textContent = 'Send Code';
+            }
+        })
+        .catch(error => {
+            loading.style.display = 'none';
+            showAlert('Network error. Please try again.', 'error');
+            sendCodeBtn.disabled = false;
+            sendCodeBtn.textContent = 'Send Code';
+            console.error('Error:', error);
+        });
+    });
+
+    // Form submission validation
+    form.addEventListener('submit', function(e) {
+        if (password.value !== reEnterPassword.value) {
+            e.preventDefault();
+            showAlert('Passwords do not match. Please check your entries.', 'error');
+            return false;
+        }
+    });
+
+    // Initialize
+    validatePasswords();
+    
+    // If we have an active timer from previous submission, restart it
+    <?php if (isset($_SESSION['code_expiry']) && time() < strtotime($_SESSION['code_expiry'])): ?>
+        const timeLeft = Math.floor((<?php echo strtotime($_SESSION['code_expiry']); ?> - <?php echo time(); ?>) / 1000);
+        if (timeLeft > 0) {
+            startTimer(timeLeft);
+            sendCodeBtn.disabled = true;
+            sendCodeBtn.textContent = 'Code Sent';
+        }
+    <?php endif; ?>
+});
+</script>
+</body>
+</html>

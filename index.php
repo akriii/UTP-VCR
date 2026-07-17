@@ -327,7 +327,7 @@ footer img {
             <img src="image/utp_logo.png" alt="UTP Logo" class="logo" />
             <div class="logo-text">UTP VCR</div>
         </div>
-      <a href="user/login.php" class="login-btn">Login Now</a>
+      <a href="portal/user/login.php" class="login-btn">Login Now</a>
     </div>
   </nav>
 
