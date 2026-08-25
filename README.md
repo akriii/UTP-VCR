@@ -29,7 +29,11 @@ packages, Tesseract OCR) plus a pre-seeded MySQL database run with one
 command. Nothing else needs to be installed on your machine.
 
   1. Install Docker Desktop:  https://www.docker.com/products/docker-desktop/
-  2. Copy the example environment file:
+  2. Clone the branch repository to local machine
+  
+         git clone -b feature/dockerize https://github.com/akriii/UTP-VCR
+
+  3. Copy the example environment file:
 
          cp .env.example .env
 
