@@ -1,0 +1,24 @@
+# Keep the build context small and never bake secrets / local state into the image.
+.git
+.gitignore
+vendor
+.env
+*.md
+documentation
+docker-compose.yml
+.dockerignore
+
+# Local upload output (mounted as a volume at runtime instead)
+documents/generated_zips/*
+documents/kyc6/*
+documents/bank_statement/*
+documents/declaration_form/*
+documents/fyp_form_file/*
+documents/appointment_file/*
+documents/ic_picture/*
+documents/face_captures/*
+!documents/**/.gitkeep
+
+# OS junk
+.DS_Store
+Thumbs.db

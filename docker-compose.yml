@@ -1,0 +1,46 @@
+# UTP Vendor Code Requisition — full local stack.
+# Run everything with a single command:  docker compose up --build
+#
+# Prereq: copy .env.example to .env first ( cp .env.example .env ).
+services:
+  app:
+    build: .
+    container_name: utp_vcr_app
+    ports:
+      - "8080:80"            # open the site at http://localhost:8080
+    env_file:
+      - .env
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      # The app reads the .env FILE at runtime (phpdotenv), so mount it in.
+      # env_file below only injects vars into the shell, not this file.
+      - ./.env:/var/www/html/.env:ro
+      # Persist uploaded documents to the host and survive rebuilds.
+      - ./documents:/var/www/html/documents
+    restart: unless-stopped
+
+  db:
+    image: mysql:8.4
+    container_name: utp_vcr_db
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: utp_vendor_hub
+      MYSQL_USER: utp_user
+      MYSQL_PASSWORD: utp_password
+    ports:
+      - "3307:3306"          # host port 3307 -> avoids clashing with local MySQL
+    volumes:
+      - db_data:/var/lib/mysql
+      # Seed the schema + data on first startup (only runs on an empty volume).
+      - ./database/utp_vendor_hub.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-proot"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    restart: unless-stopped
+
+volumes:
+  db_data:
