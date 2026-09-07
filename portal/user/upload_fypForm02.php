@@ -1,6 +1,7 @@
 <?php
 session_start();
 include "../../config.php";
+require_once "../../s3.php";
 
 if (!isset($_SESSION['email'])) {
     header("Location: login.php");
@@ -8,12 +9,7 @@ if (!isset($_SESSION['email'])) {
 }
 
 $email = $_SESSION['email'];
-$uploadDir = "../../documents/fyp_form_file/";
-
-// Ensure upload folder exists
-if (!is_dir($uploadDir)) {
-    mkdir($uploadDir, 0777, true);
-}
+$uploadFolder = "fyp_form_file"; // S3 key prefix
 
 // Check if file was uploaded
 if (!isset($_FILES['fyp_form_file']) || $_FILES['fyp_form_file']['error'] !== UPLOAD_ERR_OK) {
@@ -84,14 +80,12 @@ $check_fyp_stmt->close();
 // ===== 4. CREATE UNIQUE FILENAME =====
 $dateTime = date("Ymd_His");
 $newFileName = "fypForm02_" . $safeEmail . "_" . $dateTime . "." . $fileExtension;
-$targetPath = $uploadDir . $newFileName;
+$relativeFilePath = $uploadFolder . "/" . $newFileName;
 
-// ===== 5. MOVE UPLOADED FILE =====
-if (move_uploaded_file($_FILES['fyp_form_file']['tmp_name'], $targetPath)) {
+// ===== 5. UPLOAD FILE TO S3 =====
+if (s3_put_file($_FILES['fyp_form_file']['tmp_name'], $relativeFilePath, $_FILES['fyp_form_file']['type'])) {
 
     // ===== 6. SAVE FILE PATH TO DATABASE =====
-    $relativeFilePath = "fyp_form_file/" . $newFileName;
-
     if ($existing_form_record) {
         // UPDATE existing record (re-upload after rejection or while pending)
         $update_fyp = $db->prepare("UPDATE fyp_form_02 SET fyp_form_file = ?, fypForm_verify = NULL WHERE report_id = ?");
@@ -121,7 +115,7 @@ if (move_uploaded_file($_FILES['fyp_form_file']['tmp_name'], $targetPath)) {
     }
 
 } else {
-    $_SESSION['upload_error'] = "Failed to upload file.";
+    $_SESSION['upload_error'] = "Failed to upload file to cloud storage.";
 }
 
 // ===== 7. REDIRECT TO HOMEPAGE =====

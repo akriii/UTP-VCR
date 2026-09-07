@@ -1,6 +1,7 @@
 <?php
 session_start();
 include "../../config.php";
+require_once "../../s3.php";
 
 // Get user email from session
 $email = $_SESSION['email'];
@@ -25,16 +26,16 @@ if ($result && $result->num_rows > 0) {
     $date_signed = $row['date_signed'];
     $signed_by = $row['signed_by'];
 
-    // Display the PDF inline in the browser
-    if (!empty($filePath) && file_exists("../" . $filePath)) {
-        header('Content-Type: application/pdf');
-        header('Content-Disposition: inline; filename="' . basename($filePath) . '"');
-        header('Content-Length: ' . filesize("../" . $filePath));
-        readfile("../" . $filePath);
+    // Hand the browser a short-lived pre-signed S3 link so the PDF opens inline
+    $key = s3_key($filePath, 'declaration_form');
+    $url = $key !== '' ? s3_presigned_url($key, false) : false;
+
+    if ($url !== false && s3_exists($key)) {
+        header('Location: ' . $url, true, 302);
         exit();
     } else {
-        // If file doesn't exist, show error page
-        showErrorPage("PDF file not found at path: " . htmlspecialchars($filePath));
+        // If the object isn't in the bucket, show error page
+        showErrorPage("PDF file not found in cloud storage: " . htmlspecialchars($filePath));
     }
 } else {
     showErrorPage("No declaration form found for this user.");

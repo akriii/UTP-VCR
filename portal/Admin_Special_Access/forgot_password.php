@@ -29,7 +29,7 @@ function sendVerificationCode($email, $code) {
     try {
         // Load environment variables
         $dotenv = Dotenv::createImmutable(__DIR__ . '/../..');
-        $dotenv->load();
+        $dotenv->safeLoad();
 
         $mail = new PHPMailer(true);
         

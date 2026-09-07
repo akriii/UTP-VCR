@@ -49,12 +49,61 @@ The bundled MySQL container is automatically seeded from
 database/utp_vendor_hub.sql on first run, so the app works immediately.
 
 Notes:
-  - Email (SMTP) and AWS S3 upload features only work if you fill in the
-    matching keys in .env. The core app runs fine without them.
+  - AWS S3 keys in .env are REQUIRED: every uploaded document is stored in
+    the S3 bucket, not on disk. See "DOCUMENT STORAGE (AWS S3)" below.
+  - Email (SMTP) features only work if you fill in the matching keys in .env.
   - To stop:            docker compose down
   - To wipe the DB and re-seed:   docker compose down -v   then up again.
   - MySQL is also reachable from the host on port 3307
     (user: utp_user / password: utp_password / db: utp_vendor_hub).
+
+--------------------------------------------------------------------
+DOCUMENT STORAGE (AWS S3)
+--------------------------------------------------------------------
+
+All user documents - IC copies, face captures, bank statements, signed
+declaration forms, FYP Form 02, appointment letters, KYC6 reports and the
+generated ZIP bundles - are stored in the S3 bucket named by AWS_BUCKET.
+Nothing is written to the local ./documents folder any more.
+
+Configuration (.env):
+
+    AWS_ACCESS_KEY_ID       IAM key with s3:PutObject, s3:GetObject,
+    AWS_SECRET_ACCESS_KEY   s3:DeleteObject and s3:ListBucket on the bucket
+    AWS_REGION              the region the bucket ACTUALLY lives in
+    AWS_BUCKET              bucket name
+    APP_SECRET              random string used to sign document links
+
+Verify the setup at any time:
+
+    php tools/s3_check.php
+
+It reports whether the bucket is reachable, warns if AWS_REGION does not
+match the bucket's real region, and round-trips a test object.
+
+How it works:
+
+  - s3.php           the storage layer (put / get / delete / presign) plus
+                     doc_url(), which builds browser-facing document links
+  - file.php         the only way a document is served. It requires a valid
+                     session, verifies an HMAC over the object key, then
+                     redirects to a short-lived pre-signed S3 URL. The
+                     bucket itself stays private - no public-read objects.
+
+Object keys are identical to the relative paths already stored in the
+database (e.g. "bank_statement/foo.pdf"), so no schema or data changes were
+needed.
+
+Migrating an existing installation:
+
+    php tools/migrate_documents_to_s3.php --dry-run   # preview
+    php tools/migrate_documents_to_s3.php             # upload
+
+It copies everything under ./documents into the bucket, skipping objects
+that are already there, so it is safe to re-run. It deletes nothing locally.
+Once you have confirmed the documents load in the app, delete ./documents
+yourself - it is dead weight, and the .htaccess in there blocks direct web
+access to the leftovers in the meantime.
 
 --------------------------------------------------------------------
 MANUAL INSTALLATION (without Docker)

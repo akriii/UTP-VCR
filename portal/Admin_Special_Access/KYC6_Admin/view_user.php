@@ -1,6 +1,7 @@
 <?php 
 session_start();
 include('../../../config.php');
+require_once('../../../s3.php');
 
 if (!isset($_SESSION['admin_id']) || $_SESSION['admin_role'] != 'kyc6_admin') {
     header("Location: ../login_admin.php");
@@ -643,7 +644,7 @@ if (isset($user['uid']) && (!isset($user['user_id']) || $user['user_id'] == ''))
                     <span class="label-title">IC Picture:</span>
                     <span class="detail-value">
                         <?php if (!empty($user['ic_picture'])): ?>
-                            <a href="../../../documents/<?= htmlspecialchars($user['ic_picture'])?? 'N/A' ?>" target="_blank" class="doc-link">
+                            <a href="<?= htmlspecialchars(doc_url($user['ic_picture'] ?? '', 'ic_picture')) ?>" target="_blank" class="doc-link">
                                 <i class="fas fa-eye"></i> View Document
                             </a>
                         <?php else: ?>
@@ -655,7 +656,7 @@ if (isset($user['uid']) && (!isset($user['user_id']) || $user['user_id'] == ''))
                     <span class="label-title">Face Capture:</span>
                     <span class="detail-value">
                         <?php if (!empty($user['face_recognition'])): ?>
-                            <a href="../../../documents/<?= htmlspecialchars($user['face_recognition'])?? 'N/A' ?>" target="_blank" class="doc-link">
+                            <a href="<?= htmlspecialchars(doc_url($user['face_recognition'] ?? '', 'face_captures')) ?>" target="_blank" class="doc-link">
                                 <i class="fas fa-eye"></i> View Document
                             </a>
                         <?php else: ?>
@@ -684,7 +685,7 @@ if (isset($user['uid']) && (!isset($user['user_id']) || $user['user_id'] == ''))
                 <input type="file" id="kyc6" name="kyc6" accept=".pdf,.doc,.docx,.jpg,.png" />
                     <?php if (!empty($user['KYC6_file'])): ?>
                         <div class="current-file">
-                            Current: <a href="../../../documents/kyc6/<?= htmlspecialchars($user['KYC6_file'])?? 'N/A' ?>" target="_blank" class="doc-link">
+                            Current: <a href="<?= htmlspecialchars(doc_url($user['KYC6_file'] ?? '', 'kyc6')) ?>" target="_blank" class="doc-link">
                             <i class="fas fa-eye"></i> View Current Document
                             </a>
                         </div>

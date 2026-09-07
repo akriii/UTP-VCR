@@ -16,7 +16,7 @@ class KYC6Reminder {
         try {
             // Load email settings
             $dotenv = Dotenv::createImmutable(__DIR__ . '/../..');
-            $dotenv->load();
+            $dotenv->safeLoad();
             
             // Get pending applications
             $pending_applications = $this->getPendingApplications();

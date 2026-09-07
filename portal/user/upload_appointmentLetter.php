@@ -1,6 +1,7 @@
 <?php
 session_start();
 include "../../config.php";
+require_once "../../s3.php";
 
 if (!isset($_SESSION['email'])) {
     header("Location: login.php");
@@ -8,12 +9,7 @@ if (!isset($_SESSION['email'])) {
 }
 
 $email = $_SESSION['email'];
-$uploadDir = "../../documents/appointment_file/";
-
-// Ensure upload folder exists
-if (!is_dir($uploadDir)) {
-    mkdir($uploadDir, 0777, true);
-}
+$uploadFolder = "appointment_file"; // S3 key prefix
 
 // Check if file was uploaded
 if (!isset($_FILES['appointment_file']) || $_FILES['appointment_file']['error'] !== UPLOAD_ERR_OK) {
@@ -99,14 +95,12 @@ $check_appointment_stmt->close();
 // ===== 5. CREATE UNIQUE FILENAME =====
 $dateTime = date("Ymd_His");
 $newFileName = "appointment_letter_" . $safeEmail . "_" . $dateTime . "." . $fileExtension;
-$targetPath = $uploadDir . $newFileName;
+$relativeFilePath = $uploadFolder . "/" . $newFileName;
 
-// ===== 6. MOVE UPLOADED FILE =====
-if (move_uploaded_file($_FILES['appointment_file']['tmp_name'], $targetPath)) {
+// ===== 6. UPLOAD FILE TO S3 =====
+if (s3_put_file($_FILES['appointment_file']['tmp_name'], $relativeFilePath, $_FILES['appointment_file']['type'])) {
 
     // ===== 7. SAVE FILE PATH TO DATABASE =====
-    $relativeFilePath = "appointment_file/" . $newFileName;
-
     if ($existing_appointment_record) {
         // UPDATE existing record (re-upload after rejection or while pending)
         $update_appointment = $db->prepare("UPDATE appointment_letter SET appointment_file = ?, appointmentLetter_verify = NULL WHERE report_id = ?");
@@ -136,7 +130,7 @@ if (move_uploaded_file($_FILES['appointment_file']['tmp_name'], $targetPath)) {
     }
 
 } else {
-    $_SESSION['upload_error'] = "Failed to upload file. Please try again.";
+    $_SESSION['upload_error'] = "Failed to upload file to cloud storage. Please try again.";
 }
 
 // ===== 8. REDIRECT TO HOMEPAGE =====

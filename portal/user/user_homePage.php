@@ -5,6 +5,7 @@
 
 session_start();
 include "../../config.php";
+require_once "../../s3.php";
 
 // If user is not logged in, redirect to login page
 if (!isset($_SESSION['email'])) {
@@ -776,7 +777,7 @@ $step6_visible = $step5_completed;
         <?php if ($icUploaded): ?>
             <div class="file-status file-approved" style="margin-bottom: 30px;">
                 <i class="fa-solid fa-check"></i> <strong>File Uploaded Successfully</strong>
-                <br><a href="../../documents/<?php echo htmlspecialchars($current_ic); ?>" target="_blank">View uploaded file</a>
+                <br><a href="<?php echo htmlspecialchars(doc_url($current_ic, 'ic_picture')); ?>" target="_blank">View uploaded file</a>
             </div>
         <?php else: ?>
             <form method="POST" enctype="multipart/form-data" action="upload_ic.php" style="margin-bottom: 30px;">
@@ -800,7 +801,7 @@ $step6_visible = $step5_completed;
             <?php if ($faceCaptured): ?>
                 <div class="file-status file-approved">
                     <i class="fa-solid fa-user-check"></i> <strong>Face captured successfully</strong>
-                    <br><img src="../../documents/<?php echo htmlspecialchars($current_face); ?>" style="width: 100px; height: 100px; object-fit: cover; border-radius: 50%; margin-top: 10px; border: 2px solid #28a745;">
+                    <br><img src="<?php echo htmlspecialchars(doc_url($current_face, 'face_captures')); ?>" style="width: 100px; height: 100px; object-fit: cover; border-radius: 50%; margin-top: 10px; border: 2px solid #28a745;">
                 </div>
                 <p style="color: green; margin-top: 15px; font-weight: bold;">
                     <i class="fa-solid fa-arrow-down"></i> You can now proceed to Step 2 below.
@@ -879,7 +880,7 @@ $step6_visible = $step5_completed;
                     <i class="fa-solid fa-file"></i> 
                     <strong>FYP Form 02 Uploaded</strong>
                     <br>
-                    <a href="../../documents/fyp_form_file/<?php echo htmlspecialchars($fypForm02FileName); ?>" target="_blank">View uploaded file</a>
+                    <a href="<?php echo htmlspecialchars(doc_url($fypForm02FileName, 'fyp_form_file')); ?>" target="_blank">View uploaded file</a>
                     <p style="color: green; margin-top: 10px;">
                         <i class="fa-solid fa-check-circle"></i> 
                         Your FYP Form 02 has been approved.
@@ -891,7 +892,7 @@ $step6_visible = $step5_completed;
                     <i class="fa-solid fa-file"></i> 
                     <strong>FYP Form 02 Rejected</strong>
                     <br>
-                    <a href="../../documents/fyp_form_file/<?php echo htmlspecialchars($fypForm02FileName); ?>" target="_blank">View uploaded file</a>
+                    <a href="<?php echo htmlspecialchars(doc_url($fypForm02FileName, 'fyp_form_file')); ?>" target="_blank">View uploaded file</a>
                     
                     <div style="margin-top: 10px; padding: 10px; background: #f8d7da; border-radius: 5px;">
                         <p style="color: #721c24; margin: 0;">
@@ -913,7 +914,7 @@ $step6_visible = $step5_completed;
                     <i class="fa-solid fa-file"></i> 
                     <strong>FYP Form 02 Uploaded</strong>
                     <br>
-                    <a href="../../documents/fyp_form_file/<?php echo htmlspecialchars($fypForm02FileName); ?>" target="_blank">View uploaded file</a>
+                    <a href="<?php echo htmlspecialchars(doc_url($fypForm02FileName, 'fyp_form_file')); ?>" target="_blank">View uploaded file</a>
                     <p style="color: #856404; margin-top: 10px;">
                         <i class="fa-solid fa-clock"></i> 
                         Waiting for admin verification. Please check back later.
@@ -942,7 +943,7 @@ $step6_visible = $step5_completed;
                 <i class="fa-solid fa-file"></i> 
                 <strong>Appointment Letter Uploaded</strong>
                 <br>
-                <a href="../../documents/appointment_file/<?php echo htmlspecialchars($appointmentLetterFileName); ?>" target="_blank">View uploaded file</a>
+                <a href="<?php echo htmlspecialchars(doc_url($appointmentLetterFileName, 'appointment_file')); ?>" target="_blank">View uploaded file</a>
                 <p style="color: green; margin-top: 10px;">
                     <i class="fa-solid fa-check-circle"></i> 
                     Your appointment letter has been approved.
@@ -954,7 +955,7 @@ $step6_visible = $step5_completed;
                 <i class="fa-solid fa-file"></i> 
                 <strong>Appointment Letter Rejected</strong>
                 <br>
-                <a href="../../documents/appointment_file/<?php echo htmlspecialchars($appointmentLetterFileName); ?>" target="_blank">View uploaded file</a>
+                <a href="<?php echo htmlspecialchars(doc_url($appointmentLetterFileName, 'appointment_file')); ?>" target="_blank">View uploaded file</a>
                 
                 <div style="margin-top: 10px; padding: 10px; background: #f8d7da; border-radius: 5px;">
                     <p style="color: #721c24; margin: 0;">
@@ -976,7 +977,7 @@ $step6_visible = $step5_completed;
                 <i class="fa-solid fa-file"></i> 
                 <strong>Appointment Letter Uploaded</strong>
                 <br>
-                <a href="../../documents/appointment_file/<?php echo htmlspecialchars($appointmentLetterFileName); ?>" target="_blank">View uploaded file</a>
+                <a href="<?php echo htmlspecialchars(doc_url($appointmentLetterFileName, 'appointment_file')); ?>" target="_blank">View uploaded file</a>
                 <p style="color: #856404; margin-top: 10px;">
                     <i class="fa-solid fa-clock"></i> 
                     Waiting for admin verification. Please check back later.
@@ -1014,7 +1015,7 @@ $step6_visible = $step5_completed;
                 <i class="fa-solid fa-file"></i> 
                 <strong>Bank Statement Rejected</strong>
                 <br>
-                <a href="../../documents/bank_statement/<?php echo htmlspecialchars($bankStatementFileName); ?>" target="_blank">View uploaded file</a>
+                <a href="<?php echo htmlspecialchars(doc_url($bankStatementFileName, 'bank_statement')); ?>" target="_blank">View uploaded file</a>
                 
                 <div style="margin-top: 10px; padding: 10px; background: #f8d7da; border-radius: 5px;">
                     <p style="color: #721c24; margin: 0;">
@@ -1059,7 +1060,7 @@ $step6_visible = $step5_completed;
                 <i class="fa-solid fa-file-signature"></i> 
                 <strong>Bank Statement Approved</strong>
                 <br>
-                <a href="../../documents/bank_statement/<?php echo htmlspecialchars($bankStatementFileName); ?>" target="_blank">View uploaded file</a>
+                <a href="<?php echo htmlspecialchars(doc_url($bankStatementFileName, 'bank_statement')); ?>" target="_blank">View uploaded file</a>
                 <p style="color: green; margin-top: 10px;">
                     <i class="fa-solid fa-check-circle"></i> 
                     Your bank statement has been approved and cannot be modified.
@@ -1071,7 +1072,7 @@ $step6_visible = $step5_completed;
                     <i class="fa-solid fa-file"></i> 
                     <strong>Bank Statement Uploaded</strong>
                     <br>
-                    <a href="../../documents/bank_statement/<?php echo htmlspecialchars($bankStatementFileName); ?>" target="_blank">View uploaded file</a>
+                    <a href="<?php echo htmlspecialchars(doc_url($bankStatementFileName, 'bank_statement')); ?>" target="_blank">View uploaded file</a>
                     <p style="color: #856404; margin-top: 10px;">
                         <i class="fa-solid fa-clock"></i> 
                         Waiting for admin verification. Please check back later.

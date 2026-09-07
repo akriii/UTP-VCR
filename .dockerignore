@@ -2,7 +2,7 @@
 .git
 .gitignore
 vendor
-.env
+
 *.md
 documentation
 docker-compose.yml

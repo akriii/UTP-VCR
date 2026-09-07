@@ -1,6 +1,7 @@
 <?php 
 session_start();
 include('../../../config.php');
+require_once('../../../s3.php');
 
 if (!isset($_SESSION['admin_id']) || $_SESSION['admin_role'] != 'ae_admin') {
     header("Location: ../login_admin.php");
@@ -657,7 +658,7 @@ if (isset($user['uid']) && (!isset($user['user_id']) || $user['user_id'] == ''))
         <span class="label-title">KYC6 Document:</span>
         <span class="detail-value">
             <?php if (!empty($user['KYC6_file'])): ?>
-                <a href="../../../documents/kyc6/<?= htmlspecialchars($user['KYC6_file']) ?>" target="_blank" class="doc-link">
+                <a href="<?= htmlspecialchars(doc_url($user['KYC6_file'] ?? '', 'kyc6')) ?>" target="_blank" class="doc-link">
                     <i class="fas fa-eye"></i> View Document
                 </a>
             <?php else: ?>
@@ -674,7 +675,7 @@ if (isset($user['uid']) && (!isset($user['user_id']) || $user['user_id'] == ''))
         <span class="label-title">Appointment Form Document:</span>
         <span class="detail-value">
             <?php if (!empty($user['appointment_file'])): ?>
-                <a href="../../../documents/<?= htmlspecialchars($user['appointment_file']) ?>" target="_blank" class="doc-link">
+                <a href="<?= htmlspecialchars(doc_url($user['appointment_file'] ?? '', 'appointment_file')) ?>" target="_blank" class="doc-link">
                     <i class="fas fa-eye"></i> View Document
                 </a>
             <?php else: ?>

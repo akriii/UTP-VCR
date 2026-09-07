@@ -26,7 +26,7 @@ function sendVerificationCode($email, $password) {
         // Load environment variables - FIXED PATH
         $basePath = dirname(dirname(dirname(__DIR__)));
         $dotenv = Dotenv::createImmutable($basePath);
-        $dotenv->load();
+        $dotenv->safeLoad();
 
         $mail = new PHPMailer(true);
         

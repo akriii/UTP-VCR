@@ -1,6 +1,7 @@
 <?php
 session_start();
 include "../../config.php"; // Adjust path to your config file
+require_once "../../s3.php";
 
 if (!isset($_SESSION['email'])) {
     echo json_encode(['success' => false, 'message' => 'Unauthorized']);
@@ -27,18 +28,11 @@ if (isset($data['image'])) {
     $img = str_replace(' ', '+', $img);
     $data = base64_decode($img);
 
-    // 3. Create Directory if it doesn't exist
-    $uploadDir = '../../documents/face_captures/'; // Make sure this folder exists or create it
-    if (!file_exists($uploadDir)) {
-        mkdir($uploadDir, 0777, true);
-    }
-
-    // 4. Generate Filename and Save
+    // 3. Generate Filename and store the capture in S3
     $fileName = 'face_' . $user_id . '_' . time() . '.png';
-    $filePath = $uploadDir . $fileName;
-    $dbPath = 'face_captures/' . $fileName; // Path to store in DB
+    $dbPath = 'face_captures/' . $fileName; // Object key, also stored in the DB
 
-    if (file_put_contents($filePath, $data)) {
+    if (s3_put_data($dbPath, $data, 'image/png')) {
         // 5. Update Database
         $updateStmt = $db->prepare("UPDATE user SET face_recognition = ? WHERE user_id = ?");
         $updateStmt->bind_param("si", $dbPath, $user_id);
@@ -50,7 +44,7 @@ if (isset($data['image'])) {
         }
         $updateStmt->close();
     } else {
-        echo json_encode(['success' => false, 'message' => 'Failed to save image']);
+        echo json_encode(['success' => false, 'message' => 'Failed to save image to cloud storage']);
     }
 } else {
     echo json_encode(['success' => false, 'message' => 'No image data received']);

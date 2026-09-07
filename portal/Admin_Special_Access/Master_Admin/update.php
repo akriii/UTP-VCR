@@ -1,6 +1,7 @@
 <?php
 session_start();
 include('../../../config.php');
+require_once('../../../s3.php');
 
 // Check permissions
 if (!isset($_SESSION['admin_id']) || $_SESSION['admin_role'] != 'master_admin') {
@@ -15,9 +16,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $expired_date = date('Y-m-d', strtotime('+2 year')); 
     $admin_id = isset($_SESSION['admin_id']) ? intval($_SESSION['admin_id']) : null;
     
-    // Calculate Absolute Root Path (e.g., C:/laragon/www/UTP_Vendor_Hub)
-    $projectRoot = str_replace('\\', '/', dirname(dirname(dirname(__DIR__)))); 
-
     // Default fallback for filename
     $user_ic_string = "User_" . $user_id; 
 
@@ -61,65 +59,66 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $clean_ic = preg_replace('/[^A-Za-z0-9_\-]/', '', $user_ic_string);
     $zipFileName = "UTPVCR_" . $clean_ic . "_" . date("F_Y") . ".zip";
     
-    $zipDir = $projectRoot . "/documents/generated_zips/";
-    if (!is_dir($zipDir)) {
-        mkdir($zipDir, 0777, true);
-    }
-    
-    $zipPath = $zipDir . $zipFileName;
-    
+    // The archive is assembled in the system temp folder, then uploaded to S3.
+    $zipPath = tempnam(sys_get_temp_dir(), 'utpzip_') . '.zip';
+
+    // Temp copies pulled down from S3, removed once the archive is closed.
+    $tempDownloads = [];
+
     if ($zip->open($zipPath, ZipArchive::CREATE | ZipArchive::OVERWRITE) === TRUE) {
-        
+
         // --- SMART FILE ADDER FUNCTION ---
-        function addSmartFile($zip, $root, $folder, $dbFilename) {
-            if (empty($dbFilename)) return; 
+        // Pulls the object out of S3 into a temp file, then adds it to the archive.
+        function addSmartFile($zip, $folder, $dbFilename) {
+            global $tempDownloads;
 
-            // Strategy 1: Check if DB value already contains the folder (e.g., "bank_statement/file.pdf")
-            $path1 = $root . "/documents/" . $dbFilename;
+            if (empty($dbFilename)) return;
 
-            // Strategy 2: Check if we need to add the folder (e.g., "file.pdf" -> "bank_statement/file.pdf")
-            $path2 = $root . "/documents/" . $folder . "/" . $dbFilename;
-
-            if (file_exists($path1) && !is_dir($path1)) {
-                $zip->addFile($path1, basename($path1));
-            } 
-            elseif (file_exists($path2) && !is_dir($path2)) {
-                $zip->addFile($path2, basename($path2));
-            } 
-            else {
-                // Log error for admin to see in PHP logs
-                error_log("ZIP ERROR: Could not find file. Tried: $path1 AND $path2");
+            // Accepts both DB shapes: "bank_statement/file.pdf" and bare "file.pdf"
+            $key = s3_key($dbFilename, $folder);
+            if ($key === '') {
+                error_log("ZIP ERROR: Unusable file reference '$dbFilename' for folder '$folder'");
+                return;
             }
+
+            $localPath = s3_download_temp($key);
+            if ($localPath === false) {
+                error_log("ZIP ERROR: Could not fetch '$key' from S3.");
+                return;
+            }
+
+            $tempDownloads[] = $localPath;
+            $zip->addFile($localPath, basename($key));
         }
 
         // 1. IC Picture (User Table)
         if (!empty($userData['ic_picture'])) {
-            addSmartFile($zip, $projectRoot, "ic_picture", $userData['ic_picture']);
+            addSmartFile($zip,"ic_picture", $userData['ic_picture']);
         }
 
         // 2. KYC6
         $q = mysqli_query($db, "SELECT KYC6_file FROM kyc6 WHERE report_id = '$report_id'");
         if ($row = mysqli_fetch_assoc($q)) {
-            addSmartFile($zip, $projectRoot, "kyc6", $row['KYC6_file']);
+            addSmartFile($zip,"kyc6", $row['KYC6_file']);
         }
 
         // 3. Bank Statement
         $q = mysqli_query($db, "SELECT statement_file FROM bank_statement WHERE report_id = '$report_id'");
         if ($row = mysqli_fetch_assoc($q)) {
-            addSmartFile($zip, $projectRoot, "bank_statement", $row['statement_file']);
+            addSmartFile($zip,"bank_statement", $row['statement_file']);
         }
 
         // 4. Declaration Form
         $q = mysqli_query($db, "SELECT declaration_file FROM declaration_form WHERE report_id = '$report_id'");
         if ($row = mysqli_fetch_assoc($q)) {
-            addSmartFile($zip, $projectRoot, "declaration_form", $row['declaration_file']);
+            addSmartFile($zip,"declaration_form", $row['declaration_file']);
         }
 
         // 5. FYP Form (Student)
         if (($userData['user_type'] ?? '') == 'student') {
             $q = mysqli_query($db, "SELECT fyp_form_file FROM fyp_form_02 WHERE report_id = '$report_id'");
             if ($row = mysqli_fetch_assoc($q)) {
-                addSmartFile($zip, $projectRoot, "fyp_form_file", $row['fyp_form_file']);
+                addSmartFile($zip,"fyp_form_file", $row['fyp_form_file']);
             }
         }
 
@@ -127,16 +126,29 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         if (($userData['user_type'] ?? '') == 'external_appointment') {
             $q = mysqli_query($db, "SELECT appointment_file FROM appointment_letter WHERE report_id = '$report_id'");
             if ($row = mysqli_fetch_assoc($q)) {
-                addSmartFile($zip, $projectRoot, "appointment_file", $row['appointment_file']);
+                addSmartFile($zip,"appointment_file", $row['appointment_file']);
             }
         }
         
         $zip->close();
-        
+
+        // Clean up the temp copies now that they are inside the archive
+        foreach ($tempDownloads as $tempFile) {
+            @unlink($tempFile);
+        }
+
         if (file_exists($zipPath)) {
-            $_SESSION['download_zip'] = $zipFileName;
+            $zipKey = "generated_zips/" . $zipFileName;
+
+            if (s3_put_file($zipPath, $zipKey, 'application/zip')) {
+                $_SESSION['download_zip'] = $zipFileName;
+            } else {
+                $_SESSION['error'] = "Zip file could not be uploaded to cloud storage.";
+            }
+
+            @unlink($zipPath);
         } else {
-            $_SESSION['error'] = "Zip file was not created (Folder permissions?).";
+            $_SESSION['error'] = "Zip file was not created.";
         }
 
     } else {

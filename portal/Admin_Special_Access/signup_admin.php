@@ -32,7 +32,7 @@ function sendVerificationCode($email, $code) {
     try {
 
         $dotenv = Dotenv::createImmutable(__DIR__ . '/../..'); 
-        $dotenv->load();
+        $dotenv->safeLoad();
 
         $mail = new PHPMailer(true);
         

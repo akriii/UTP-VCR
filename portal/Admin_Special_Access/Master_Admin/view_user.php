@@ -1,6 +1,7 @@
 <?php 
 session_start();
 include('../../../config.php');
+require_once('../../../s3.php');
 
 if ($_SESSION['admin_role'] != 'master_admin') {
     header("Location: ../login_admin.php");
@@ -755,7 +756,7 @@ $user = array_merge($user, $kyc6, $bankStatement, $declaration, $fypForm, $appoi
         <span class="label-title">KYC6 Document:</span>
         <span class="detail-value">
             <?php if (!empty($user['KYC6_file'])): ?>
-                <a href="../../../documents/kyc6/<?= htmlspecialchars($user['KYC6_file'] ?? '') ?>" target="_blank" class="doc-link">
+                <a href="<?= htmlspecialchars(doc_url($user['KYC6_file'] ?? '', 'kyc6')) ?>" target="_blank" class="doc-link">
                     <i class="fas fa-eye"></i> View Document
                 </a>
             <?php else: ?>
@@ -773,7 +774,7 @@ $user = array_merge($user, $kyc6, $bankStatement, $declaration, $fypForm, $appoi
             <span class="label-title">FYP Form 02:</span>
             <span class="detail-value">
                 <?php if (!empty($user['fyp_form_file'])): ?>
-                    <a href="../../../documents/<?php echo htmlspecialchars($user['fyp_form_file'] ?? ''); ?>" target="_blank" class="doc-link">
+                    <a href="<?php echo htmlspecialchars(doc_url($user['fyp_form_file'] ?? '', 'fyp_form_file')); ?>" target="_blank" class="doc-link">
                         <i class="fas fa-eye"></i> View Document
                     </a>
                 <?php else: ?>
@@ -805,7 +806,7 @@ $user = array_merge($user, $kyc6, $bankStatement, $declaration, $fypForm, $appoi
             <span class="label-title">Appointment Letter:</span>
             <span class="detail-value">
                 <?php if (!empty($user['appointment_file'])): ?>
-                    <a href="../../../documents/<?php echo htmlspecialchars($user['appointment_file'] ?? ''); ?>" target="_blank" class="doc-link">
+                    <a href="<?php echo htmlspecialchars(doc_url($user['appointment_file'] ?? '', 'appointment_file')); ?>" target="_blank" class="doc-link">
                         <i class="fas fa-eye"></i> View Document
                     </a>
                 <?php else: ?>
@@ -837,7 +838,7 @@ $user = array_merge($user, $kyc6, $bankStatement, $declaration, $fypForm, $appoi
         <span class="label-title">Bank Statement:</span>
         <span class="detail-value">
             <?php if (!empty($user['statement_file'])): ?>
-                <a href="../../../documents/<?= htmlspecialchars($user['statement_file'] ?? '') ?>" target="_blank" class="doc-link">
+                <a href="<?= htmlspecialchars(doc_url($user['statement_file'] ?? '', 'bank_statement')) ?>" target="_blank" class="doc-link">
                     <i class="fas fa-eye"></i> View Document
                 </a>
             <?php else: ?>
@@ -945,7 +946,7 @@ $user = array_merge($user, $kyc6, $bankStatement, $declaration, $fypForm, $appoi
             <span class="label-title">Declaration Form:</span>
             <span class="detail-value">
                 <?php if (!empty($user['declaration_file'])): ?>
-                    <a href="../../../documents/<?= htmlspecialchars($user['declaration_file'] ?? '') ?>" target="_blank" class="doc-link">
+                    <a href="<?= htmlspecialchars(doc_url($user['declaration_file'] ?? '', 'declaration_form')) ?>" target="_blank" class="doc-link">
                         <i class="fas fa-eye"></i> View Document
                     </a>
                 <?php else: ?>
@@ -1137,7 +1138,7 @@ document.addEventListener('DOMContentLoaded', function() {
         document.addEventListener('DOMContentLoaded', function() {
             // Create a hidden link and click it to trigger download
             var link = document.createElement('a');
-            link.href = '../../../documents/generated_zips/<?= htmlspecialchars($_SESSION['download_zip']) ?>';
+            link.href = '<?= htmlspecialchars(doc_url($_SESSION['download_zip'], 'generated_zips', true), ENT_QUOTES) ?>';
             link.download = '<?= htmlspecialchars($_SESSION['download_zip']) ?>';
             document.body.appendChild(link);
             link.click();

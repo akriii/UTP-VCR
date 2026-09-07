@@ -5,8 +5,9 @@
 .env
 
 # System Generated Files & User Uploads
-# We ignore the files inside but keep the folder structure.
-# All upload/output folders now live under documents/
+# Uploads now go to the S3 bucket named by AWS_BUCKET, not to disk.
+# These folders only hold pre-migration leftovers (see tools/migrate_documents_to_s3.php)
+# and are kept ignored so nothing sensitive can be committed by accident.
 /documents/generated_zips/*
 !/documents/generated_zips/.gitkeep
 

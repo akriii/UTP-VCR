@@ -2,6 +2,7 @@
 session_start();
 include "../../config.php";
 require_once "pdf_extractor.php"; // Include our new extractor
+require_once "../../s3.php";
 
 if (!isset($_SESSION['email'])) {
     header("Location: login.php");
@@ -9,12 +10,7 @@ if (!isset($_SESSION['email'])) {
 }
 
 $email = $_SESSION['email'];
-$uploadDir = "../../documents/bank_statement/";
-
-// Ensure upload folder exists
-if (!is_dir($uploadDir)) {
-    mkdir($uploadDir, 0777, true);
-}
+$uploadFolder = "bank_statement"; // S3 key prefix
 
 // Check if file was uploaded
 if (!isset($_FILES['financial_file']) || $_FILES['financial_file']['error'] !== UPLOAD_ERR_OK) {
@@ -87,16 +83,18 @@ if ($check_bank_result->num_rows > 0) {
 }
 $check_bank_stmt->close();
 
-// ===== 4. CREATE UNIQUE FILENAME AND UPLOAD =====
+// ===== 4. CREATE UNIQUE FILENAME AND UPLOAD TO S3 =====
 $dateTime = date("Ymd_His");
 $newFileName = "bank_statement_" . $safeEmail . "_" . $dateTime . ".pdf";
-$targetPath = $uploadDir . $newFileName;
+$relativeFilePath = $uploadFolder . "/" . $newFileName;
+$tmpPath = $_FILES['financial_file']['tmp_name'];
 
-if (move_uploaded_file($_FILES['financial_file']['tmp_name'], $targetPath)) {
-    
+if (s3_put_file($tmpPath, $relativeFilePath, 'application/pdf')) {
+
     // ===== 5. EXTRACT INFORMATION FROM PDF =====
+    // Read from PHP's temp copy, which is still on disk at this point.
 $extractor = new BankStatementExtractor();
-$extractionResult = $extractor->extractBankInfo($targetPath);
+$extractionResult = $extractor->extractBankInfo($tmpPath);
 
 $account_no = null;
 $bank_name = trim($_POST['bank_name']);  // GET FROM USER SELECTION
@@ -117,8 +115,6 @@ if ($extractionResult['success']) {
 }
 
 // ===== 6. SAVE TO DATABASE =====
-$relativeFilePath = "bank_statement/" . $newFileName;
-
 if ($existing_bank_record) {
     // UPDATE existing record
     $update_bank = $db->prepare("UPDATE bank_statement SET statement_file = ?, account_no = ?, bank_name = ?, date = ?, bankStatement_verify = NULL WHERE report_id = ?");
@@ -160,7 +156,7 @@ $_SESSION['extraction_results'] = [
 ];
     
 } else {
-    $_SESSION['upload_error'] = "Failed to upload file.";
+    $_SESSION['upload_error'] = "Failed to upload file to cloud storage.";
 }
 
 // ===== 7. REDIRECT TO HOMEPAGE =====

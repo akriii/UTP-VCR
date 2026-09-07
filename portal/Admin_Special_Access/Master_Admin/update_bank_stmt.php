@@ -134,7 +134,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             
             $basePath = dirname(dirname(dirname(__DIR__)));
             $dotenv = Dotenv::createImmutable($basePath);
-            $dotenv->load();
+            $dotenv->safeLoad();
             
             $userEmail = $_POST['user_email'];
             $userName = $_POST['user_name'];

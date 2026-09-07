@@ -1,6 +1,7 @@
 <?php 
 session_start();
 include('../../../config.php');
+require_once('../../../s3.php');
 
 // Check if admin is logged in
 if (!isset($_SESSION['admin_id']) || $_SESSION['admin_role'] != 'ae_admin') {
@@ -54,25 +55,23 @@ if (isset($_POST['delete_user'])) {
             mysqli_stmt_execute($stmt_files);
             $fileResult = mysqli_stmt_get_result($stmt_files);
 
-            // whitelist directories for each file column
+            // whitelist of S3 folders (key prefixes) for each file column
             $dirs = [
-                'kyc6_file' => realpath(__DIR__ . '/../../../documents/kyc6'),
-                'statement_file' => realpath(__DIR__ . '/../../../documents/bank_statement'),
-                'declaration_file' => realpath(__DIR__ . '/../../../documents/declaration_form'),
-                'fyp_form_file' => realpath(__DIR__ . '/../../../documents/fyp_form_file'),
-                'appointment_file' => realpath(__DIR__ . '/../../../documents/appointment_file'),
+                'kyc6_file' => 'kyc6',
+                'statement_file' => 'bank_statement',
+                'declaration_file' => 'declaration_form',
+                'fyp_form_file' => 'fyp_form_file',
+                'appointment_file' => 'appointment_file',
             ];
 
             $filesToDelete = [];
             while ($fileRow = mysqli_fetch_assoc($fileResult)) {
-                foreach ($dirs as $col => $baseDir) {
-                    if (!empty($fileRow[$col]) && $baseDir !== false) {
-                        // sanitize using basename and ensure resolved path is inside baseDir
-                        $filename = basename($fileRow[$col]);
-                        $fullPath = $baseDir . DIRECTORY_SEPARATOR . $filename;
-                        $real = realpath($fullPath);
-                        if ($real && strpos($real, $baseDir) === 0) {
-                            $filesToDelete[] = $real;
+                foreach ($dirs as $col => $folder) {
+                    if (!empty($fileRow[$col])) {
+                        // s3_key() rejects traversal and anything outside the whitelist
+                        $key = s3_key($fileRow[$col], $folder);
+                        if ($key !== '') {
+                            $filesToDelete[] = $key;
                         }
                     }
                 }
@@ -82,9 +81,9 @@ if (isset($_POST['delete_user'])) {
             // Begin transaction and delete DB rows safely
             mysqli_begin_transaction($db);
             try {
-                // Delete files
-                foreach ($filesToDelete as $filePath) {
-                    @unlink($filePath);
+                // Delete the stored objects from S3
+                foreach ($filesToDelete as $objectKey) {
+                    s3_delete($objectKey);
                 }
 
                 // Delete related rows from each table where report belongs to this user

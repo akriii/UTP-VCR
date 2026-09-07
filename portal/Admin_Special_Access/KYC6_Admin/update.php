@@ -2,6 +2,7 @@
 session_start();
 include('../../../config.php');
 require '../../../vendor/autoload.php'; // PHPMailer
+require_once '../../../s3.php';
 
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
@@ -10,7 +11,7 @@ use Dotenv\Dotenv;
 // Load environment variables
 $basePath = dirname(dirname(dirname(__DIR__)));
 $dotenv = Dotenv::createImmutable($basePath);
-$dotenv->load();
+$dotenv->safeLoad();
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $userID = $_POST['user_id'] ?? '';
@@ -92,16 +93,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         // Handle KYC6 file upload
         // ==============================
         if (!empty($_FILES['kyc6']['name']) && $_FILES['kyc6']['error'] === UPLOAD_ERR_OK) {
-            $targetDir = "../../../documents/kyc6/";
-            if (!is_dir($targetDir)) {
-                mkdir($targetDir, 0777, true);
-            }
-
             $fileExtension = pathinfo($_FILES['kyc6']['name'], PATHINFO_EXTENSION);
             $ekycFile = "kyc6_" . $userID . "_" . time() . "." . $fileExtension;
-            $targetFilePath = $targetDir . $ekycFile;
-            
-            if (move_uploaded_file($_FILES["kyc6"]["tmp_name"], $targetFilePath)) {
+            // Only the bare filename is stored in kyc6.KYC6_file (legacy shape);
+            // the object lives under the "kyc6/" prefix in the bucket.
+            $kyc6Key = "kyc6/" . $ekycFile;
+
+            if (s3_put_file($_FILES["kyc6"]["tmp_name"], $kyc6Key, $_FILES["kyc6"]["type"])) {
                 $updateEkyc = "UPDATE kyc6 SET KYC6_file = ? WHERE report_id = ?";
                 $stmt = mysqli_prepare($db, $updateEkyc);
                 if (!$stmt) {
@@ -114,7 +112,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 }
                 mysqli_stmt_close($stmt);
             } else {
-                throw new Exception("Failed to upload KYC6 file.");
+                throw new Exception("Failed to upload KYC6 file to cloud storage.");
             }
         }
 

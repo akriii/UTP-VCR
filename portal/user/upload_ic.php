@@ -1,6 +1,7 @@
 <?php
 session_start();
 include "../../config.php";
+require_once "../../s3.php";
 
 // Ensure user is logged in
 if (!isset($_SESSION['email'])) {
@@ -9,12 +10,7 @@ if (!isset($_SESSION['email'])) {
 }
 
 $email = $_SESSION['email'];
-$uploadDir = "../../documents/ic_picture/";
-
-// Make sure folder exists
-if (!is_dir($uploadDir)) {
-    mkdir($uploadDir, 0777, true);
-}
+$uploadFolder = "ic_picture"; // S3 key prefix
 
 // ===== 1. VALIDATE IC NUMBER =====
 if (!isset($_POST['ic_no']) || empty(trim($_POST['ic_no']))) {
@@ -120,16 +116,14 @@ if ($report_result->num_rows > 0) {
 }
 $report_stmt->close();
 
-// ===== 7. CREATE UNIQUE FILENAME AND UPLOAD FILE =====
+// ===== 7. CREATE UNIQUE FILENAME AND UPLOAD FILE TO S3 =====
 $dateTime = date("Ymd_His");
 $newFileName = "ic_copy_" . $safeEmail . "_" . $dateTime . "." . $fileExtension;
-$targetPath = $uploadDir . $newFileName;
+$relativeFilePath = $uploadFolder . "/" . $newFileName;
 
-// Move uploaded file from temporary location to destination folder
-if (move_uploaded_file($_FILES['ic_picture']['tmp_name'], $targetPath)) {
+// Stream the uploaded file straight from PHP's tmp folder into the S3 bucket
+if (s3_put_file($_FILES['ic_picture']['tmp_name'], $relativeFilePath, $_FILES['ic_picture']['type'])) {
     // ===== 8. SAVE FILE PATH AND IC NUMBER TO DATABASE =====
-    $relativeFilePath = "ic_picture/" . $newFileName;
-
     $update_stmt = $db->prepare("UPDATE user SET ic_picture = ?, ic_no = ? WHERE user_id = ?");
     $update_stmt->bind_param("ssi", $relativeFilePath, $ic_no, $user_id);
 
@@ -145,8 +139,8 @@ if (move_uploaded_file($_FILES['ic_picture']['tmp_name'], $targetPath)) {
     $update_stmt->close();
 
 } else {
-    // ERROR: File upload failed
-    $_SESSION['upload_error'] = "Failed to upload the file. Please try again.";
+    // ERROR: File upload to S3 failed
+    $_SESSION['upload_error'] = "Failed to upload the file to cloud storage. Please try again.";
 }
 
 // ===== 9. REDIRECT BACK TO HOMEPAGE =====

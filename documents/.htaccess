@@ -1,0 +1,13 @@
+# Uploads now live in the S3 bucket named by AWS_BUCKET and are served through
+# the access-controlled /file.php endpoint, never from this folder.
+#
+# Anything still here is a pre-migration leftover (see
+# tools/migrate_documents_to_s3.php). Block direct web access to it so those
+# copies cannot be fetched by guessing a URL.
+<IfModule mod_authz_core.c>
+    Require all denied
+</IfModule>
+<IfModule !mod_authz_core.c>
+    Order allow,deny
+    Deny from all
+</IfModule>

@@ -17,8 +17,8 @@ services:
       # The app reads the .env FILE at runtime (phpdotenv), so mount it in.
       # env_file below only injects vars into the shell, not this file.
       - ./.env:/var/www/html/.env:ro
-      # Persist uploaded documents to the host and survive rebuilds.
-      - ./documents:/var/www/html/documents
+      # No documents volume: uploads go straight to the S3 bucket named by
+      # AWS_BUCKET, so there is no local upload state left to persist.
     restart: unless-stopped
 
   db:

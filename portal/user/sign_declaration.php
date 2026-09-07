@@ -5,6 +5,7 @@ include "../../config.php";
 
 // Autoload Composer dependencies
 require '../../vendor/autoload.php';
+require_once '../../s3.php';
 
 // Use Dompdf namespace
 use Dompdf\Dompdf;
@@ -237,19 +238,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && $canSign) {
         $safeEmail = preg_replace('/[^a-zA-Z0-9]/', '', $email);
         $pdf_filename = 'declaration_' . $safeEmail . '_' . date('Ymd_His') . '.pdf';
 
-        // CORRECT FOLDER: declaration_form
-        $folder_path = '../../documents/declaration_form/';
-        if (!is_dir($folder_path)) {
-            mkdir($folder_path, 0755, true);
-        }
-        
-        $file_path = $folder_path . $pdf_filename;
+        // CORRECT FOLDER: declaration_form (S3 key prefix)
+        $relative_file_path = "declaration_form/" . $pdf_filename;
 
-        // Save file to folder
-        if (file_put_contents($file_path, $pdf_data)) {
+        // Store the generated PDF in S3
+        if (s3_put_data($relative_file_path, $pdf_data, 'application/pdf')) {
             // Insert or Update into declaration_form table
-            $relative_file_path = "declaration_form/" . $pdf_filename;
-            
             if ($declarationExists) {
                 // UPDATE existing record (re-sign after rejection)
                 $sql = "UPDATE declaration_form SET date_signed = NOW(), signed_by = ?, declaration_file = ?, declaration_verify = NULL WHERE report_id = ?";
@@ -275,7 +269,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && $canSign) {
             }
             $stmt->close();
         } else {
-            $message = "Error: Could not save PDF file.";
+            $message = "Error: Could not save PDF file to cloud storage.";
         }
     } else {
         $message = "Please confirm all statements and provide your name.";
