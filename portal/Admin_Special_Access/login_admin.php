@@ -53,7 +53,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             header("Location: AE/homepage.php");
         }
         exit();
-    } else {
+    } /*else {
         // If password verification fails, try direct comparison
         if ($password == $hashed_password) {
             // Password is correct (plain text)
@@ -77,8 +77,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         } else {
             echo "<script>alert('Invalid email or password');</script>";
         }
-    }
-} else {
+    }*/
+}else {
         echo "<script>alert('Invalid email or password');</script>";
     }
 

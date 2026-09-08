@@ -26,7 +26,7 @@ function sendVerificationCode($email, $code) {
         $mail->Port = 587; 
         
         
-        $mail->SMTPDebug = 2; 
+        $mail->SMTPDebug = 0; 
         $mail->Debugoutput = function($str, $level) {
             error_log("PHPMailer Debug (Level $level): $str");
         };
@@ -85,5 +85,14 @@ if (isset($_SESSION['verification_email']) && isset($_SESSION['verification_code
     error_log("Session verification_email: " . (isset($_SESSION['verification_email']) ? $_SESSION['verification_email'] : 'NOT SET'));
     error_log("Session verification_code: " . (isset($_SESSION['verification_code']) ? $_SESSION['verification_code'] : 'NOT SET'));
     return false;
+}
+
+//deny the bruteforce attack by limiting the number of attempts to 5
+if (!isset($_SESSION['otp_attempts'])) { $_SESSION['otp_attempts'] = 0; }
+$_SESSION['otp_attempts']++;
+
+if ($_SESSION['otp_attempts'] >= 5) {
+    unset($_SESSION['verification_code']);
+    die("Too many failed attempts. Request a new code.");
 }
 ?>

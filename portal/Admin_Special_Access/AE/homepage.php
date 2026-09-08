@@ -724,9 +724,9 @@ $(document).ready(function () {
     $('.filter-btn').on('click', function () {
         var status = $(this).data('status').toLowerCase();
         if (status) {
-            table.column(3).search(status, true, false).draw();
+            table.column(2).search(status, true, false).draw();
         } else {
-            table.column(3).search('').draw();
+            table.column(2).search('').draw();
         }
     });
 });
